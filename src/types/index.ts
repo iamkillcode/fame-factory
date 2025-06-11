@@ -4,6 +4,7 @@ import type { User as FirebaseUser } from 'firebase/auth';
 export type Gender = 'Male' | 'Female' | 'Non-binary' | 'Prefer not to say';
 export type Genre = 'Pop' | 'Rock' | 'Hip Hop' | 'R&B' | 'Electronic' | 'Country' | 'Jazz' | 'Blues' | 'K-Pop' | 'Indie' | 'Folk' | 'Metal' | 'Rap';
 export type MusicStyle = 'Love' | 'Party' | 'Struggle' | 'Conscious' | 'Hype' | 'Chill' | 'Experimental';
+export type ProductionQuality = 'Low' | 'Medium' | 'High';
 
 export interface Artist {
   uid: string; // Firebase User ID
@@ -43,6 +44,8 @@ export interface Song {
   sales?: number; // Units sold or streams
   fanReaction?: number; // 0-100, general sentiment
   criticScore?: number; // 0-100, reviews
+  productionQuality: ProductionQuality;
+  productionInvestment: number; // Amount spent on production
 }
 
 export interface Album {
@@ -76,6 +79,20 @@ export interface ActiveEvent extends GeneratedEventData {
   chosenOption?: number; // 0, 1, or 2
 }
 
+export interface TrainingActivity {
+  id: string;
+  name: string;
+  description: string;
+  cost: number;
+  effects: {
+    skills?: number;
+    reputation?: number;
+    money?: number; // Could also be a gain for some activities
+    fame?: number;
+    // Can add more specific effects later, e.g., vocalSkill, songwritingSkill
+  };
+}
+
 
 export interface GameState {
   artist: Artist | null;
@@ -88,6 +105,7 @@ export interface GameState {
   availableMusicStyles: MusicStyle[]; // Styles for Music Forge
   availableGenres: Genre[];
   availableGenders: Gender[];
+  selectedActivityId: string | null; // ID of the training activity chosen for the week
 }
 
 export const ALL_GENRES: Genre[] = ['Pop', 'Rock', 'Hip Hop', 'R&B', 'Electronic', 'Country', 'Jazz', 'Blues', 'K-Pop', 'Indie', 'Folk', 'Metal', 'Rap'];
@@ -122,3 +140,4 @@ export interface AuthContextType {
   signIn: (credentials: SignInCredentials) => Promise<void>;
   signOut: () => Promise<void>;
 }
+

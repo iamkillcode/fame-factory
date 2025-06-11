@@ -5,7 +5,7 @@ import { useGame } from '@/contexts/game-state-context';
 import { PageHeader } from '@/components/page-header';
 import { StatCard } from '@/components/stat-card';
 import { Button } from '@/components/ui/button';
-import { BarChart, DollarSign, TrendingUp, Users, Star, Award, CalendarDays, Loader2, Wand2, Library, MessageCircle, Zap } from 'lucide-react';
+import { BarChart, DollarSign, TrendingUp, Users, Star, Award, CalendarDays, Loader2, Wand2, Library, MessageCircle, Zap, Palette, Briefcase, Brain, Smile } from 'lucide-react';
 import { SectionCard } from '@/components/section-card';
 import Link from 'next/link';
 import {
@@ -17,6 +17,10 @@ import {
 } from "@/components/ui/chart"
 import { Bar, BarChart as RechartsBarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, TooltipProps } from "recharts"
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
+import { AVAILABLE_TRAINING_ACTIVITIES } from '@/hooks/use-game-state';
+import type { TrainingActivity } from '@/types';
+import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 
 const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
@@ -35,15 +39,41 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameT
   return null;
 };
 
+const activityIcons: Record<string, React.ElementType> = {
+  vocal_training: Palette,
+  songwriting_workshop: Brain,
+  networking_event: Briefcase,
+  performance_rehearsal: Star,
+  social_media_blitz: TrendingUp,
+  rest_recover: Smile,
+};
+
 
 export default function DashboardPage() {
-  const { gameState, nextTurn, isLoaded } = useGame();
+  const { gameState, nextTurn, isLoaded, selectWeeklyActivity, updateArtistStats } = useGame();
+  const { toast } = useToast();
 
   if (!isLoaded || !gameState.artist) {
     return <div className="flex h-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /> Loading Dashboard...</div>;
   }
 
-  const { artist, currentTurn, songs } = gameState;
+  const { artist, currentTurn, songs, selectedActivityId } = gameState;
+
+  const handleSelectActivity = (activity: TrainingActivity) => {
+    if (artist.money < activity.cost) {
+      toast({
+        title: "Not enough funds",
+        description: `You need $${activity.cost} for ${activity.name}. You only have $${artist.money}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    selectWeeklyActivity(activity.id);
+    toast({
+        title: "Activity Selected",
+        description: `${activity.name} is planned for this week.`,
+    })
+  };
 
   const chartData = [
     { name: 'Fame', value: artist.fame, fill: "hsl(var(--chart-1))" },
@@ -79,9 +109,9 @@ export default function DashboardPage() {
         description={`Currently Week ${currentTurn} of your career. Make it count!`}
         icon={Star}
       >
-        <Button onClick={nextTurn} className="btn-glossy-accent" size="lg">
+        <Button onClick={nextTurn} className="btn-glossy-accent" size="lg" disabled={!selectedActivityId}>
           <CalendarDays className="mr-2 h-5 w-5" />
-          Advance to Next Week
+          {!selectedActivityId ? "Select Activity First" : "Advance to Next Week"}
         </Button>
       </PageHeader>
 
@@ -125,7 +155,7 @@ export default function DashboardPage() {
             <Button asChild variant="outline" className="w-full justify-start text-left glassy-card hover:bg-primary/10">
              <Link href="/social-connect">
                 <MessageCircle className="mr-2 h-4 w-4 text-primary" />
-                Engage on Socials
+                Engage on XConnect
               </Link>
             </Button>
             <Button asChild variant="outline" className="w-full justify-start text-left glassy-card hover:bg-primary/10">
@@ -138,6 +168,44 @@ export default function DashboardPage() {
         </SectionCard>
       </div>
 
+      <SectionCard title="Weekly Focus" description="Choose an activity to focus on this week. This will be processed when you advance to the next week.">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {AVAILABLE_TRAINING_ACTIVITIES.map(activity => {
+            const Icon = activityIcons[activity.id] || Award; // Default icon
+            const isSelected = selectedActivityId === activity.id;
+            const canAfford = artist.money >= activity.cost;
+            return (
+              <Button
+                key={activity.id}
+                variant="outline"
+                className={cn(
+                  "h-auto p-4 flex flex-col items-start text-left glassy-card hover:border-primary/80",
+                  isSelected && "border-primary ring-2 ring-primary bg-primary/10",
+                  !canAfford && "opacity-50 cursor-not-allowed"
+                )}
+                onClick={() => canAfford ? handleSelectActivity(activity) : toast({title: "Not enough funds", description: `You need $${activity.cost}.`, variant: "destructive"})}
+                disabled={!canAfford && !isSelected}
+              >
+                <div className="flex items-center mb-2">
+                  <Icon className={cn("h-6 w-6 mr-3", isSelected ? "text-primary" : "text-muted-foreground")} />
+                  <h3 className="text-lg font-semibold text-foreground">{activity.name}</h3>
+                </div>
+                <p className="text-sm text-muted-foreground mb-1">{activity.description}</p>
+                <p className="text-xs font-semibold text-primary">Cost: ${activity.cost}</p>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Effects:
+                  {activity.effects.skills ? ` Skills +${activity.effects.skills}` : ""}
+                  {activity.effects.reputation ? ` Rep +${activity.effects.reputation}` : ""}
+                  {activity.effects.fame ? ` Fame +${activity.effects.fame}` : ""}
+                  {activity.effects.money ? ` Money ${activity.effects.money > 0 ? '+' : ''}${activity.effects.money}` : ""}
+                </div>
+              </Button>
+            );
+          })}
+        </div>
+      </SectionCard>
+
+
       {recentReleasedSongs.length > 0 && (
         <SectionCard title="Recent Releases">
           <div className="space-y-4">
@@ -145,6 +213,7 @@ export default function DashboardPage() {
               <div key={song.id} className="p-4 rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm">
                 <h3 className="font-semibold text-lg text-foreground">{song.title}</h3>
                 <p className="text-sm text-muted-foreground">Style: {song.style} | Theme: {song.theme}</p>
+                <p className="text-sm text-muted-foreground">Production: {song.productionQuality} (${song.productionInvestment} invested)</p>
                 <p className="text-sm text-muted-foreground">Released: Week {song.releaseTurn}</p>
                 {song.currentChartPosition && <p className="text-sm text-primary">Chart Position: #{song.currentChartPosition}</p>}
                 <p className="text-sm text-muted-foreground">Fan Reaction: {song.fanReaction}% | Critic Score: {song.criticScore}%</p>
@@ -157,3 +226,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

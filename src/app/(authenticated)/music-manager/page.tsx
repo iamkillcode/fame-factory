@@ -4,9 +4,9 @@
 import { useGame } from '@/contexts/game-state-context';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Library, Disc3, PlusCircle, UploadCloud, BarChart2, ListMusic, Loader2 } from 'lucide-react';
+import { Library, Disc3, PlusCircle, UploadCloud, BarChart2, ListMusic, Loader2, DollarSign, TrendingUp } from 'lucide-react';
 import { SectionCard } from '@/components/section-card';
-import type { Song } from '@/types';
+import type { Song, ProductionQuality } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/chart"
 import { Line, LineChart as RechartsLineChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, TooltipProps } from "recharts"
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
+import { cn } from '@/lib/utils';
 
 const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
   if (active && payload && payload.length) {
@@ -38,9 +39,15 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameT
   return null;
 };
 
+const productionUpgradeCosts = {
+    Medium: 500,
+    HighFromLow: 2000,
+    HighFromMedium: 1500,
+};
+
 
 export default function MusicManagerPage() {
-  const { gameState, releaseSong, isLoaded } = useGame();
+  const { gameState, releaseSong, investInSongProduction, isLoaded } = useGame();
   const { toast } = useToast();
 
   if (!isLoaded || !gameState.artist) {
@@ -49,28 +56,45 @@ export default function MusicManagerPage() {
 
   const unreleasedSongs = gameState.songs.filter(s => !s.isReleased);
   const releasedSongs = gameState.songs.filter(s => s.isReleased).sort((a,b) => b.releaseTurn - a.releaseTurn);
-  // TODO: Add album management
+  const artistMoney = gameState.artist.money;
 
   const handleReleaseSong = (songId: string) => {
     releaseSong(songId);
-    const releasedSong = gameState.songs.find(s => s.id === songId);
+    const releasedSongDetails = gameState.songs.find(s => s.id === songId); // Find again from potentially updated state
     toast({
       title: "Song Released!",
-      description: `${releasedSong?.title || 'Your song'} is now out for the world to hear!`,
+      description: `${releasedSongDetails?.title || 'Your song'} is now out for the world to hear! (Quality: ${releasedSongDetails?.productionQuality})`,
     });
   };
+
+  const handleInvestInProduction = (songId: string, qualityLevel: 'Medium' | 'High') => {
+    let cost = 0;
+    const song = unreleasedSongs.find(s => s.id === songId);
+    if (!song) return;
+
+    if (qualityLevel === 'Medium' && song.productionQuality === 'Low') {
+        cost = productionUpgradeCosts.Medium;
+    } else if (qualityLevel === 'High') {
+        cost = song.productionQuality === 'Low' ? productionUpgradeCosts.HighFromLow : productionUpgradeCosts.HighFromMedium;
+    }
+    
+    if (artistMoney < cost) {
+        toast({ title: "Insufficient Funds", description: `You need $${cost} to upgrade production.`, variant: "destructive"});
+        return;
+    }
+    investInSongProduction(songId, qualityLevel);
+    toast({ title: "Production Upgraded!", description: `Invested $${cost} in "${song.title}" for ${qualityLevel} quality.`});
+  };
   
-  // Mock chart data for a song
   const getSongChartPerformance = (song: Song) => {
     if (!song.isReleased || !song.weeksOnChart || song.weeksOnChart < 1) return [];
     let data = [];
-    let currentPos = song.peakChartPosition || Math.floor(Math.random() * 50 + 50); // Start somewhere reasonable if no peak
+    let currentPos = song.peakChartPosition || song.currentChartPosition || Math.floor(Math.random() * 50 + 50); 
     for (let i = 0; i <= song.weeksOnChart; i++) {
         data.push({ week: song.releaseTurn + i, position: currentPos });
-        // Simulate chart movement (very basic)
-        currentPos += Math.floor(Math.random() * 10 - 5);
+        currentPos += Math.floor(Math.random() * 10 - 5 + (song.productionQuality === 'High' ? -1 : song.productionQuality === 'Medium' ? 0 : 1) ); // Quality influence
         if (currentPos < 1) currentPos = 1;
-        if (currentPos > 100) currentPos = 100; // Should fall off but for demo keep it
+        if (currentPos > 100) currentPos = 100; 
     }
     return data;
   }
@@ -87,7 +111,7 @@ export default function MusicManagerPage() {
     <div className="space-y-8">
       <PageHeader
         title="Music Manager"
-        description="Oversee your discography, release new music, and track your success."
+        description="Oversee your discography, invest in production, release new music, and track your success."
         icon={Library}
       >
         <Button asChild className="btn-glossy-accent">
@@ -99,28 +123,56 @@ export default function MusicManagerPage() {
         <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-flex">
           <TabsTrigger value="unreleased">Unreleased Tracks ({unreleasedSongs.length})</TabsTrigger>
           <TabsTrigger value="released">Released Catalogue ({releasedSongs.length})</TabsTrigger>
-          {/* <TabsTrigger value="albums" disabled>Albums & Mixtapes (0)</TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="unreleased" className="mt-6">
-          <SectionCard title="Ready for Release?" description="These tracks are waiting in the vault.">
+          <SectionCard title="Ready for Release?" description="Enhance production quality before releasing your tracks.">
             {unreleasedSongs.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">
                 No unreleased tracks. <Link href="/music-forge" className="text-primary hover:underline">Go create some hits!</Link>
               </p>
             ) : (
-              <ScrollArea className="h-[400px] pr-4">
+              <ScrollArea className="h-[500px] pr-4">
                 <div className="space-y-4">
                   {unreleasedSongs.map(song => (
-                    <div key={song.id} className="glassy-card p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-foreground">{song.title}</h3>
-                        <p className="text-sm text-muted-foreground">Style: {song.style} | Theme: {song.theme}</p>
-                        <p className="text-xs text-muted-foreground font-code truncate max-w-xs md:max-w-sm" title={song.beat}>Beat: {song.beat}</p>
+                    <div key={song.id} className="glassy-card p-4 flex flex-col gap-4">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div>
+                          <h3 className="text-lg font-semibold text-foreground">{song.title}</h3>
+                          <p className="text-sm text-muted-foreground">Style: {song.style} | Theme: {song.theme}</p>
+                          <p className="text-xs text-muted-foreground font-code truncate max-w-xs md:max-w-sm" title={song.beat}>Beat: {song.beat}</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Production Quality: <Badge variant={song.productionQuality === 'High' ? 'default' : song.productionQuality === 'Medium' ? 'secondary' : 'outline'} className={cn(song.productionQuality === 'High' && "bg-green-500 text-white")}>{song.productionQuality}</Badge>
+                            {song.productionInvestment > 0 && ` ($${song.productionInvestment} Invested)`}
+                          </p>
+                        </div>
+                        <Button onClick={() => handleReleaseSong(song.id)} size="sm" className="btn-glossy-accent shrink-0 w-full sm:w-auto">
+                          <UploadCloud className="mr-2 h-4 w-4" /> Release Song
+                        </Button>
                       </div>
-                      <Button onClick={() => handleReleaseSong(song.id)} size="sm" className="btn-glossy-accent shrink-0">
-                        <UploadCloud className="mr-2 h-4 w-4" /> Release Song
-                      </Button>
+                      <div className="flex flex-col sm:flex-row gap-2 items-center border-t border-border/30 pt-3">
+                        <p className="text-sm font-medium text-muted-foreground shrink-0">Improve Production:</p>
+                        <div className="flex gap-2 flex-wrap">
+                           <Button 
+                            size="xs" 
+                            variant="outline"
+                            onClick={() => handleInvestInProduction(song.id, 'Medium')}
+                            disabled={song.productionQuality !== 'Low' || artistMoney < productionUpgradeCosts.Medium}
+                            className="text-xs"
+                            >
+                            <TrendingUp className="mr-1.5 h-3 w-3"/> Medium Quality (${productionUpgradeCosts.Medium})
+                           </Button>
+                           <Button 
+                            size="xs" 
+                            variant="outline"
+                            onClick={() => handleInvestInProduction(song.id, 'High')}
+                            disabled={song.productionQuality === 'High' || artistMoney < (song.productionQuality === 'Low' ? productionUpgradeCosts.HighFromLow : productionUpgradeCosts.HighFromMedium)}
+                            className="text-xs"
+                            >
+                             <Star className="mr-1.5 h-3 w-3"/> High Quality (${song.productionQuality === 'Low' ? productionUpgradeCosts.HighFromLow : productionUpgradeCosts.HighFromMedium})
+                           </Button>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -144,6 +196,7 @@ export default function MusicManagerPage() {
                         <div>
                           <h3 className="text-lg font-semibold text-foreground">{song.title}</h3>
                           <p className="text-sm text-muted-foreground">Released: Week {song.releaseTurn} | Style: {song.style}</p>
+                          <p className="text-sm text-muted-foreground">Production: <Badge variant={song.productionQuality === 'High' ? 'default' : song.productionQuality === 'Medium' ? 'secondary' : 'outline'} className={cn(song.productionQuality === 'High' && "bg-green-500 text-white")}>{song.productionQuality}</Badge></p>
                         </div>
                         {song.currentChartPosition && (
                           <Badge variant="default" className="bg-primary/80 text-primary-foreground">
@@ -181,3 +234,4 @@ export default function MusicManagerPage() {
     </div>
   );
 }
+
