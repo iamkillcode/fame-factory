@@ -6,6 +6,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import type { AuthError, AuthProviderProps, AuthContextType, SignUpCredentials, SignInCredentials } from '@/types';
+import { useToast } from '@/hooks/use-toast'; // Added import
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -13,6 +14,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<AuthError | null>(null);
+  const { toast } = useToast(); // Initialize useToast
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -29,8 +31,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       if (userCredential.user) {
         await sendEmailVerification(userCredential.user);
-        // Optionally: Add a toast notification here to inform the user
-        // For example: toast({ title: "Verification Email Sent", description: "Please check your inbox to verify your email address." });
+        toast({ // Added toast notification
+          title: "Verification Email Sent", 
+          description: "Please check your inbox to verify your email address.",
+          variant: "default" 
+        });
       }
       // currentUser will be set by onAuthStateChanged
     } catch (error) {
