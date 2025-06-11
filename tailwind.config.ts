@@ -8,11 +8,18 @@ export default {
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
-        headline: ['Inter', 'sans-serif'],
-        code: ['monospace'],
+        body: ['PT Sans', 'sans-serif'],
+        headline: ['Poppins', 'sans-serif'],
+        code: ['Source Code Pro', 'monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -70,6 +77,8 @@ export default {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+        xl: 'calc(var(--radius) + 4px)', // For more rounded sections
+        '2xl': 'calc(var(--radius) + 8px)',
       },
       keyframes: {
         'accordion-down': {
@@ -88,11 +97,33 @@ export default {
             height: '0',
           },
         },
+        "shine": {
+          "from": { backgroundPosition: "200% 0" },
+          "to": { backgroundPosition: "-200% 0" }
+        },
+        "fluid-bg": {
+          "0%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+          "100%": { backgroundPosition: "0% 50%" }
+        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        "shine": "shine 5s linear infinite",
+        "fluid-bg": "fluid-bg 15s ease infinite"
       },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+        'purple-liquid-gradient': 'linear-gradient(120deg, hsl(var(--primary)/0.8) 0%, hsl(var(--accent)/0.8) 100%)',
+      },
+      boxShadow: {
+        'glow-primary-sm': '0 0 8px hsl(var(--primary)/0.5)',
+        'glow-primary-md': '0 0 12px hsl(var(--primary)/0.5)',
+        'glow-accent-sm': '0 0 8px hsl(var(--accent)/0.5)',
+        'glow-accent-md': '0 0 12px hsl(var(--accent)/0.5)',
+      }
     },
   },
   plugins: [require('tailwindcss-animate')],

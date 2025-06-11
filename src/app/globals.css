@@ -3,78 +3,102 @@
 @tailwind utilities;
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), sans-serif;
 }
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
+    --background: 273 83% 97%; /* Light Purple #F5EEFE */
+    --foreground: 274 60% 25%; /* Darker purple for text */
+
+    --muted: 273 50% 90%;
+    --muted-foreground: 274 40% 45%;
+
+    --popover: 273 83% 97%; /* Light Purple */
+    --popover-foreground: 274 60% 25%;
+
+    /* Card with HSL values, opacity will be applied via Tailwind utilities like bg-card/70 */
+    --card: 273 83% 95%; 
+    --card-foreground: 274 60% 25%;
+
+    --border: 274 79% 75%; /* Lighter shade of Saturated Purple */
+    --input: 274 79% 80%; /* Lighter shade for input */
+
+    --primary: 274 79% 61%; /* Saturated Purple #9D4EDD */
+    --primary-foreground: 0 0% 100%; /* White for good contrast */
+
+    --secondary: 280 80% 70%; /* Lighter shade of Blue-Violet for secondary elements */
+    --secondary-foreground: 0 0% 100%;
+
+    --accent: 280 100% 36%; /* Blue-Violet #7400B8 */
+    --accent-foreground: 0 0% 100%; /* White */
+
+    --destructive: 0 72% 51%; 
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --ring: 280 100% 36%; /* Blue-Violet for focus rings */
+    --radius: 0.75rem; /* More rounded corners */
+
+    --chart-1: 274 79% 61%; /* Saturated Purple */
+    --chart-2: 280 100% 36%; /* Blue-Violet */
+    --chart-3: 274 79% 45%; /* Darker Saturated Purple */
+    --chart-4: 280 100% 25%; /* Darker Blue-Violet */
+    --chart-5: 273 50% 70%; /* Muted Purple */
+
+    --sidebar-background: 276 70% 20%; /* Dark Purple for sidebar */
+    --sidebar-foreground: 273 83% 90%; /* Light Purple for sidebar text */
+    --sidebar-primary: 274 79% 61%; /* Saturated Purple for active/hover */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 280 100% 36%; /* Blue-Violet */
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 274 79% 40%;
+    --sidebar-ring: 280 100% 36%;
   }
+
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    --background: 276 70% 10%; 
+    --foreground: 273 83% 90%; 
+
+    --muted: 276 50% 20%;
+    --muted-foreground: 273 50% 70%;
+
+    --popover: 276 70% 10%;
+    --popover-foreground: 273 83% 90%;
+
+    --card: 276 70% 12%;
+    --card-foreground: 273 83% 90%;
+
+    --border: 274 79% 30%;
+    --input: 274 79% 25%;
+
+    --primary: 274 79% 61%; 
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 280 80% 50%;
+    --secondary-foreground: 0 0% 100%;
+
+    --accent: 280 100% 40%; 
+    --accent-foreground: 0 0% 100%;
+
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+
+    --ring: 280 100% 40%;
+
+    --chart-1: 274 79% 61%;
+    --chart-2: 280 100% 40%;
+    --chart-3: 274 79% 75%;
+    --chart-4: 280 100% 55%;
+    --chart-5: 273 50% 50%;
+    
+    --sidebar-background: 276 70% 5%;
+    --sidebar-foreground: 273 83% 90%;
+    --sidebar-primary: 274 79% 61%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 280 100% 40%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 274 79% 20%;
+    --sidebar-ring: 280 100% 40%;
   }
 }
 
@@ -84,5 +108,51 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+    /* Subtle animated noise texture - basic implementation */
+    /* For a real animated noise, a SVG filter or a repeating noise image with animation would be better */
+    /* background-image: linear-gradient(45deg, hsla(var(--background)/0.02) 25%, transparent 25%), linear-gradient(-45deg, hsla(var(--background)/0.02) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, hsla(var(--background)/0.02) 75%), linear-gradient(-45deg, transparent 75%, hsla(var(--background)/0.02) 75%);
+    background-size: 2px 2px; */
   }
 }
+
+@layer components {
+  .glassy-card {
+    @apply bg-card/70 backdrop-blur-md shadow-xl border border-white/20 rounded-xl;
+  }
+  .text-glow-primary {
+    @apply text-primary;
+    text-shadow: 0 0 8px hsl(var(--primary) / 0.7), 0 0 12px hsl(var(--primary) / 0.5);
+  }
+  .text-neon-accent {
+    font-family: var(--font-code);
+    color: hsl(var(--accent-foreground)); /* Ensure this is bright, e.g., white or light color */
+    background-color: transparent; /* Or a dark background for the element itself */
+    text-shadow:
+      0 0 4px hsl(var(--accent-foreground)), /* Inner glow */
+      0 0 8px hsl(var(--accent) / 0.8), /* Main neon color */
+      0 0 12px hsl(var(--accent) / 0.6), /* Outer halo */
+      0 0 16px hsl(var(--accent) / 0.4); /* Fainter outer halo */
+  }
+  .btn-glossy-accent {
+    @apply bg-accent text-accent-foreground shadow-lg transition-all duration-300 hover:shadow-accent/50 hover:brightness-110;
+    /* TODO: Add gradient for more glossy feel if needed */
+  }
+}
+
+/* Custom scrollbar for a more themed look */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted) / 0.5);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.7);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
+}
+
