@@ -4,7 +4,7 @@
 import type { User } from 'firebase/auth';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { auth } from '@/lib/firebase';
-import { onAuthStateChanged, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { onAuthStateChanged, signOut as firebaseSignOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import type { AuthError, AuthProviderProps, AuthContextType, SignUpCredentials, SignInCredentials } from '@/types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,7 +26,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setLoading(true);
     setAuthError(null);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      if (userCredential.user) {
+        await sendEmailVerification(userCredential.user);
+        // Optionally: Add a toast notification here to inform the user
+        // For example: toast({ title: "Verification Email Sent", description: "Please check your inbox to verify your email address." });
+      }
       // currentUser will be set by onAuthStateChanged
     } catch (error) {
       setAuthError(error as AuthError);
