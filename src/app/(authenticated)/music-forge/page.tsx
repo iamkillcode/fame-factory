@@ -106,7 +106,7 @@ export default function MusicForgePage() {
       return;
     }
     const { songTitle, style, theme } = form.getValues();
-     if (!style || !theme) { // Safeguard, though should be set if ideas were generated
+     if (!style || !theme) { 
        toast({ title: "Missing Information", description: "Style and theme are required to draft a song.", variant: "destructive"});
        return;
     }
@@ -126,16 +126,16 @@ export default function MusicForgePage() {
   };
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="Music Forge"
-        description="Craft your next hit! Generate unique lyrics and beat ideas."
-        icon={Wand2}
-      />
+    <Form {...form}>
+      <div className="space-y-8">
+        <PageHeader
+          title="Music Forge"
+          description="Craft your next hit! Generate unique lyrics and beat ideas."
+          icon={Wand2}
+        />
 
-      <SectionCard title="Song Concept" description="Define the vibe for your new track.">
-        <Form {...form}>
-          <form className="space-y-6"> {/* Removed onSubmit from form tag */}
+        <SectionCard title="Song Concept" description="Define the vibe for your new track.">
+          <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
@@ -167,8 +167,8 @@ export default function MusicForgePage() {
               />
             </div>
             <Button 
-              type="button" // Changed from submit
-              onClick={handleGenerateIdeas} // Added onClick
+              type="button"
+              onClick={handleGenerateIdeas}
               disabled={isLoading} 
               className="btn-glossy-accent"
             >
@@ -176,62 +176,62 @@ export default function MusicForgePage() {
               this button doesnt work
             </Button>
           </form>
-        </Form>
-      </SectionCard>
-
-      {isLoading && (
-        <SectionCard title="Generating..." className="text-center">
-          <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-          <p className="mt-2 text-muted-foreground">The AI is cooking up some magic...</p>
         </SectionCard>
-      )}
 
-      {generatedContent && (
-        <SectionCard title="Generated Ideas" description="Here's what the AI came up with. Select lyrics and give your song a title.">
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold font-headline mb-2">Beat Suggestion</h3>
-              <p className="text-sm text-muted-foreground p-4 bg-muted/30 rounded-md font-code">{generatedContent.beatSuggestion}</p>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold font-headline mb-2">Lyric Suggestions</h3>
-              <div className="space-y-3">
-                {generatedContent.lyricSuggestions.map((lyric, index) => (
-                  <div 
-                    key={index} 
-                    onClick={() => handleLyricSelection(lyric)}
-                    className={`p-3 rounded-md border cursor-pointer transition-all ${selectedLyrics.includes(lyric) ? 'bg-primary/20 border-primary ring-2 ring-primary' : 'bg-muted/20 border-border hover:border-primary/50'}`}
-                  >
-                    <p className="font-code text-neon-accent">{lyric}</p>
-                  </div>
-                ))}
+        {isLoading && (
+          <SectionCard title="Generating..." className="text-center">
+            <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
+            <p className="mt-2 text-muted-foreground">The AI is cooking up some magic...</p>
+          </SectionCard>
+        )}
+
+        {generatedContent && (
+          <SectionCard title="Generated Ideas" description="Here's what the AI came up with. Select lyrics and give your song a title.">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold font-headline mb-2">Beat Suggestion</h3>
+                <p className="text-sm text-muted-foreground p-4 bg-muted/30 rounded-md font-code">{generatedContent.beatSuggestion}</p>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold font-headline mb-2">Lyric Suggestions</h3>
+                <div className="space-y-3">
+                  {generatedContent.lyricSuggestions.map((lyric, index) => (
+                    <div 
+                      key={index} 
+                      onClick={() => handleLyricSelection(lyric)}
+                      className={`p-3 rounded-md border cursor-pointer transition-all ${selectedLyrics.includes(lyric) ? 'bg-primary/20 border-primary ring-2 ring-primary' : 'bg-muted/20 border-border hover:border-primary/50'}`}
+                    >
+                      <p className="font-code text-neon-accent">{lyric}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="pt-4 border-t border-border/50 space-y-4">
+                 <FormField
+                  control={form.control}
+                  name="songTitle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Song Title</FormLabel>
+                      <FormControl><Input placeholder="Enter a catchy title for your song" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button 
+                  onClick={handleRecordSong} 
+                  disabled={!generatedContent || selectedLyrics.length === 0}
+                  className="btn-glossy-accent w-full md:w-auto"
+                >
+                  <Disc3 className="mr-2 h-4 w-4" />
+                  Draft This Song
+                </Button>
               </div>
             </div>
-            
-            <div className="pt-4 border-t border-border/50 space-y-4">
-               <FormField
-                control={form.control}
-                name="songTitle"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Song Title</FormLabel>
-                    <FormControl><Input placeholder="Enter a catchy title for your song" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button 
-                onClick={handleRecordSong} 
-                disabled={!generatedContent || selectedLyrics.length === 0} // Updated disabled condition
-                className="btn-glossy-accent w-full md:w-auto"
-              >
-                <Disc3 className="mr-2 h-4 w-4" />
-                Draft This Song
-              </Button>
-            </div>
-          </div>
-        </SectionCard>
-      )}
-    </div>
+          </SectionCard>
+        )}
+      </div>
+    </Form>
   );
 }
