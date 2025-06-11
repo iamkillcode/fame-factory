@@ -57,9 +57,10 @@ export default function MusicForgePage() {
       };
       const result = await generateMusicLyrics(input);
       setGeneratedContent(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating music content:", error);
-      toast({ title: "Generation Failed", description: "Could not generate music ideas. Please try again.", variant: "destructive"});
+      const errorMessage = error instanceof Error ? error.message : "Could not generate music ideas. Please try again.";
+      toast({ title: "Generation Failed", description: errorMessage, variant: "destructive"});
     }
     setIsLoading(false);
   }

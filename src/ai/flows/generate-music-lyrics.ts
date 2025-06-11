@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -54,8 +55,18 @@ const generateMusicLyricsFlow = ai.defineFlow(
     inputSchema: GenerateMusicLyricsInputSchema,
     outputSchema: GenerateMusicLyricsOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+  async (input): Promise<GenerateMusicLyricsOutput> => {
+    const response = await prompt(input);
+    const parsedOutput = response.output;
+
+    if (!parsedOutput) {
+      console.error(
+        `[generateMusicLyricsFlow] LLM response did not conform to the expected schema or was empty. Input: ${JSON.stringify(input)}. Full Genkit response object:`, response
+      );
+      throw new Error(
+        'The AI had trouble generating ideas in the right format. Try a different style or theme, or simplify your theme.'
+      );
+    }
+    return parsedOutput;
   }
 );
