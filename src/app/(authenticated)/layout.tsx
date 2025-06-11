@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation'; // Import usePathname
 import { useEffect } from 'react';
 import { useGame } from '@/contexts/game-state-context';
-import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarFooter, SidebarTrigger, SidebarInset, useSidebar } from '@/components/ui/sidebar'; // Added useSidebar
+import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarFooter, SidebarTrigger, SidebarInset, useSidebar } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
 import { SidebarNav } from '@/components/sidebar-nav';
 import { Button } from '@/components/ui/button';
@@ -13,15 +13,16 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function AuthenticatedLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const pathname = usePathname(); // Get current pathname
-  const { gameState, isLoaded } = useGame(); // Removed createArtist as it's not used here
+  const pathname = usePathname(); 
+  const { gameState, isLoaded } = useGame(); 
+  const sidebarContext = useSidebar(); // Call useSidebar unconditionally at the top
 
   useEffect(() => {
     // Redirect to artist-genesis if loaded, no artist, and NOT already on artist-genesis
     if (isLoaded && !gameState.artist && pathname !== '/artist-genesis') {
       router.replace('/artist-genesis');
     }
-  }, [isLoaded, gameState.artist, router, pathname]); // Added pathname to dependency array
+  }, [isLoaded, gameState.artist, router, pathname]); 
 
   // Show loader if:
   // 1. Game state is not loaded yet OR
@@ -39,8 +40,7 @@ export default function AuthenticatedLayout({ children }: { children: ReactNode 
     window.location.href = '/artist-genesis'; 
   };
 
-  // Access sidebar state for collapsed check
-  const sidebarContext = useSidebar();
+  // Access sidebar state for collapsed check - now safe as sidebarContext is defined
   const isSidebarCollapsed = sidebarContext?.state?.includes('collapsed');
 
 
