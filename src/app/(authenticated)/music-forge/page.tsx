@@ -146,7 +146,7 @@ export default function MusicForgePage() {
             </div>
             <Button type="submit" disabled={isLoading} className="btn-glossy-accent">
               {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Lightbulb className="mr-2 h-4 w-4" />}
-              Generate Ideas
+              this button doesnt work
             </Button>
           </form>
         </Form>
