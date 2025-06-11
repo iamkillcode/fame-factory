@@ -4,7 +4,7 @@
 import { useGame } from '@/contexts/game-state-context';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Library, Disc3, PlusCircle, UploadCloud, BarChart2, ListMusic, Loader2, DollarSign, TrendingUp } from 'lucide-react';
+import { Library, Disc3, PlusCircle, UploadCloud, BarChart2, ListMusic, Loader2, DollarSign, TrendingUp, Star } from 'lucide-react';
 import { SectionCard } from '@/components/section-card';
 import type { Song, ProductionQuality } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
