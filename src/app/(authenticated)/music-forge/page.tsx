@@ -56,13 +56,24 @@ export default function MusicForgePage() {
         theme: values.theme,
       };
       const result = await generateMusicLyrics(input);
-      setGeneratedContent(result);
+
+      if (result && result.beatSuggestion && result.lyricSuggestions && result.lyricSuggestions.length > 0) {
+        setGeneratedContent(result);
+      } else {
+        console.warn("Generated content was empty or invalid:", result);
+        toast({
+          title: "No Ideas Generated",
+          description: "The AI didn't come up with useful ideas for this combination. Try a different style or theme.",
+          variant: "default",
+        });
+      }
     } catch (error: any) {
       console.error("Error generating music content:", error);
       const errorMessage = error instanceof Error ? error.message : "Could not generate music ideas. Please try again.";
       toast({ title: "Generation Failed", description: errorMessage, variant: "destructive"});
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }
 
   const handleLyricSelection = (lyric: string) => {
