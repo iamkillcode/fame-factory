@@ -38,7 +38,7 @@ export function useGameState() {
     }
 
     if (currentUser) {
-      const userGameStateRef = doc(db, 'users', currentUser.uid, 'gameState');
+      const userGameStateRef = doc(db, 'users', currentUser.uid); // Corrected path
       getDoc(userGameStateRef)
         .then((docSnap) => {
           if (docSnap.exists()) {
@@ -67,7 +67,7 @@ export function useGameState() {
     if (currentUser && isLoaded && !authLoading) { // Only save if loaded, user exists, and auth isn't processing
       // Avoid saving during initial load before gameState is truly reflective of current user
       if (gameState !== initialGameState || gameState.artist !== null) { 
-        const userGameStateRef = doc(db, 'users', currentUser.uid, 'gameState');
+        const userGameStateRef = doc(db, 'users', currentUser.uid); // Corrected path
         setDoc(userGameStateRef, gameState, { merge: true }) // Use merge: true to avoid overwriting if not all fields are present
           .catch((error) => {
             console.error("Error saving game state to Firestore:", error);
@@ -284,3 +284,4 @@ export function useGameState() {
     isLoaded // This reflects game state loading, auth state is in useAuth().loading
   };
 }
+
