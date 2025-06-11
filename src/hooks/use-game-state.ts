@@ -55,12 +55,17 @@ export function useGameState() {
             setGameState({
               ...initialGameState, // Start with defaults
               ...loadedData,       // Override with loaded data
+              artist: loadedData.artist || null, // Explicitly take loaded artist or null
               selectedActivityId: loadedData.selectedActivityId || null, // Ensure this field exists
               songs: loadedData.songs ? loadedData.songs.map(s => ({ // Ensure songs have new production fields
                 ...s,
                 productionQuality: s.productionQuality || 'Low',
                 productionInvestment: s.productionInvestment || 0,
               })) : [],
+              albums: loadedData.albums || [],
+              activeEvents: loadedData.activeEvents || [],
+              eventHistory: loadedData.eventHistory || [],
+              currentTurn: loadedData.currentTurn || 1,
             });
           } else {
             setGameState({...initialGameState, artist: null, selectedActivityId: null});
@@ -81,7 +86,9 @@ export function useGameState() {
 
   useEffect(() => {
     if (currentUser && isLoaded && !authLoading) {
-      if (gameState !== initialGameState || gameState.artist !== null) {
+      // Only save if an artist object exists in the game state.
+      // This prevents saving an empty/reset state over existing data if loading failed or user is new.
+      if (gameState.artist) {
         const userGameStateRef = doc(db, 'users', currentUser.uid);
         setDoc(userGameStateRef, gameState, { merge: true })
           .catch((error) => {
