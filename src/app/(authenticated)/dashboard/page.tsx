@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useGame } from '@/contexts/game-state-context';
 import { PageHeader } from '@/components/page-header';
 import { StatCard } from '@/components/stat-card';
 import { Button } from '@/components/ui/button';
-import { BarChart, DollarSign, TrendingUp, Users, Star, Award, CalendarDays } from 'lucide-react';
+import { BarChart, DollarSign, TrendingUp, Users, Star, Award, CalendarDays, Loader2, Wand2, Library, MessageCircle, Zap } from 'lucide-react';
 import { SectionCard } from '@/components/section-card';
 import Link from 'next/link';
 import {
@@ -117,7 +118,7 @@ export default function DashboardPage() {
             </Button>
             <Button asChild variant="outline" className="w-full justify-start text-left glassy-card hover:bg-primary/10">
               <Link href="/music-manager">
-                <LibraryMusic className="mr-2 h-4 w-4 text-primary" />
+                <Library className="mr-2 h-4 w-4 text-primary" />
                 Manage Releases
               </Link>
             </Button>

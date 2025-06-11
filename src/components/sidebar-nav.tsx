@@ -1,10 +1,11 @@
+
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
-import { Home, Wand2, LibraryMusic, MessageCircle, Zap, UserPlus, Settings } from 'lucide-react';
+import { Home, Wand2, Library, MessageCircle, Zap, UserPlus, Settings } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar'; // Assuming this hook exists and provides `state`
 
 interface NavItem {
@@ -17,7 +18,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
   { href: '/music-forge', label: 'Music Forge', icon: Wand2 },
-  { href: '/music-manager', label: 'Music Manager', icon: LibraryMusic },
+  { href: '/music-manager', label: 'Music Manager', icon: Library },
   { href: '/social-connect', label: 'Social Connect', icon: MessageCircle },
   { href: '/events', label: 'Events', icon: Zap },
   // { href: '/artist-genesis', label: 'New Artist', icon: UserPlus }, // Typically for initial setup

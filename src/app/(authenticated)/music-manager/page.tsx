@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useGame } from '@/contexts/game-state-context';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { LibraryMusic, Disc3, PlusCircle, UploadCloud, BarChart2, ListMusic } from 'lucide-react';
+import { Library, Disc3, PlusCircle, UploadCloud, BarChart2, ListMusic, Loader2 } from 'lucide-react';
 import { SectionCard } from '@/components/section-card';
 import type { Song } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -87,7 +88,7 @@ export default function MusicManagerPage() {
       <PageHeader
         title="Music Manager"
         description="Oversee your discography, release new music, and track your success."
-        icon={LibraryMusic}
+        icon={Library}
       >
         <Button asChild className="btn-glossy-accent">
           <Link href="/music-forge"><PlusCircle className="mr-2 h-4 w-4" /> Create New Music</Link>
