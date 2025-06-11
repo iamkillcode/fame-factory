@@ -44,9 +44,21 @@ export default function MusicForgePage() {
   const form = useForm<ForgeFormValues>({
     resolver: zodResolver(forgeSchema),
     defaultValues: { style: '', theme: '', songTitle: '' },
+    mode: 'onChange', // Enable onChange mode for better UX with trigger
   });
 
-  async function onSubmit(values: ForgeFormValues) {
+  const handleGenerateIdeas = async () => {
+    const isValid = await form.trigger(['style', 'theme']);
+    if (!isValid) {
+      toast({
+        title: "Missing Information",
+        description: "Please select a music style and provide a lyrical theme (2-50 characters).",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const values = form.getValues();
     setIsLoading(true);
     setGeneratedContent(null);
     setSelectedLyrics([]);
@@ -74,7 +86,7 @@ export default function MusicForgePage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   const handleLyricSelection = (lyric: string) => {
     setSelectedLyrics(prev => 
@@ -82,25 +94,35 @@ export default function MusicForgePage() {
     );
   };
 
-  const handleRecordSong = () => {
-    if (!generatedContent || !form.getValues().songTitle || selectedLyrics.length === 0) {
-      toast({ title: "Cannot Record Song", description: "Please generate content, provide a title, and select at least one lyric line.", variant: "destructive"});
+  const handleRecordSong = async () => {
+    const isTitleValid = await form.trigger('songTitle');
+    if (!isTitleValid) {
+      toast({ title: "Invalid Song Title", description: "Please provide a valid song title (2-100 characters).", variant: "destructive"});
+      return;
+    }
+
+    if (!generatedContent || selectedLyrics.length === 0) {
+      toast({ title: "Cannot Record Song", description: "Please generate content and select at least one lyric line.", variant: "destructive"});
       return;
     }
     const { songTitle, style, theme } = form.getValues();
+     if (!style || !theme) { // Safeguard, though should be set if ideas were generated
+       toast({ title: "Missing Information", description: "Style and theme are required to draft a song.", variant: "destructive"});
+       return;
+    }
+
     addSong({
       title: songTitle,
       style: style as MusicStyle,
       theme: theme,
-      lyrics: selectedLyrics.join('\n\n'), // Combine selected lyrics
+      lyrics: selectedLyrics.join('\n\n'), 
       beat: generatedContent.beatSuggestion,
-      // Other properties like isReleased, releaseTurn will be set upon release
     });
     toast({ title: "Song Drafted!", description: `${songTitle} has been added to your unreleased tracks.`});
-    updateArtistStats({ skills: 1 }); // Small skill increase for songwriting
-    setGeneratedContent(null); // Clear suggestions
+    updateArtistStats({ skills: 1 }); 
+    setGeneratedContent(null); 
     setSelectedLyrics([]);
-    form.resetField("songTitle"); // Keep style/theme for potentially another song in same vibe
+    form.resetField("songTitle"); 
   };
 
   return (
@@ -113,7 +135,7 @@ export default function MusicForgePage() {
 
       <SectionCard title="Song Concept" description="Define the vibe for your new track.">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form className="space-y-6"> {/* Removed onSubmit from form tag */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
@@ -144,7 +166,12 @@ export default function MusicForgePage() {
                 )}
               />
             </div>
-            <Button type="submit" disabled={isLoading} className="btn-glossy-accent">
+            <Button 
+              type="button" // Changed from submit
+              onClick={handleGenerateIdeas} // Added onClick
+              disabled={isLoading} 
+              className="btn-glossy-accent"
+            >
               {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Lightbulb className="mr-2 h-4 w-4" />}
               this button doesnt work
             </Button>
@@ -193,7 +220,11 @@ export default function MusicForgePage() {
                   </FormItem>
                 )}
               />
-              <Button onClick={handleRecordSong} disabled={!form.getValues().songTitle || selectedLyrics.length === 0} className="btn-glossy-accent w-full md:w-auto">
+              <Button 
+                onClick={handleRecordSong} 
+                disabled={!generatedContent || selectedLyrics.length === 0} // Updated disabled condition
+                className="btn-glossy-accent w-full md:w-auto"
+              >
                 <Disc3 className="mr-2 h-4 w-4" />
                 Draft This Song
               </Button>
