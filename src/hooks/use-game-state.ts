@@ -30,31 +30,43 @@ export function useGameState() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedState = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (storedState) {
-        try {
-          const parsedState = JSON.parse(storedState);
-          // Basic validation or migration could happen here if versions change
-          setGameState(parsedState);
-        } catch (error) {
-          console.error("Failed to parse game state from localStorage", error);
-          localStorage.removeItem(LOCAL_STORAGE_KEY); // Clear corrupted state
+      try {
+        const storedState = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (storedState) {
+          try {
+            const parsedState = JSON.parse(storedState);
+            setGameState(parsedState);
+          } catch (parseError) {
+            console.error("Failed to parse game state from localStorage", parseError);
+            localStorage.removeItem(LOCAL_STORAGE_KEY); 
+            setGameState(initialGameState); 
+          }
+        } else {
           setGameState(initialGameState);
         }
+      } catch (storageAccessError) {
+        console.error("Error accessing localStorage during load:", storageAccessError);
+        setGameState(initialGameState);
+      } finally {
+        setIsLoaded(true);
       }
-      setIsLoaded(true);
     }
   }, []);
 
   useEffect(() => {
     if (isLoaded && typeof window !== 'undefined') {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(gameState));
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(gameState));
+      } catch (storageSaveError) {
+        console.error("Error saving game state to localStorage:", storageSaveError);
+      }
     }
   }, [gameState, isLoaded]);
 
   const createArtist = useCallback((artistDetails: Omit<Artist, 'fame' | 'skills' | 'fanbase' | 'money' | 'reputation'>) => {
     setGameState(prev => ({
-      ...initialGameState, // Reset most of the state for a new game
+      ...initialGameState, 
+      currentTurn: 1, // Ensure turn resets for a new game
       artist: {
         ...artistDetails,
         fame: 0,
@@ -69,24 +81,22 @@ export function useGameState() {
   const nextTurn = useCallback(() => {
     setGameState(prev => {
       if (!prev.artist) return prev;
-      // Example: living costs
+      
       let newMoney = prev.artist.money - 50;
-      if (newMoney < 0) newMoney = 0; // Cannot have negative money from living costs
+      if (newMoney < 0) newMoney = 0; 
 
-      // Example: Small passive fame/fanbase changes (can be more complex)
       let newFame = prev.artist.fame;
       if (prev.artist.fanbase > 1000 && prev.artist.fame > 10) {
-        newFame += Math.floor(prev.artist.fanbase / 1000); // Small fame boost from existing fans
+        newFame += Math.floor(prev.artist.fanbase / 1000); 
       } else if (prev.artist.fame > 0) {
-        newFame -=1; // Slight fame decay if inactive
+        newFame -=1; 
         if (newFame < 0) newFame = 0;
       }
 
-      // Update song/album chart positions (simplified)
       const updatedSongs = prev.songs.map(song => {
         if (song.isReleased && song.currentChartPosition && song.weeksOnChart !== undefined) {
-          let newChartPos = song.currentChartPosition + Math.floor(Math.random() * 10 - 4); // Fluctuate
-          if (newChartPos > 100 || newChartPos < 1 || song.weeksOnChart > 12) { // Fall off chart
+          let newChartPos = song.currentChartPosition + Math.floor(Math.random() * 10 - 4); 
+          if (newChartPos > 100 || newChartPos < 1 || song.weeksOnChart > 12) { 
             return { ...song, currentChartPosition: null, weeksOnChart: song.weeksOnChart + 1 };
           }
           return { ...song, currentChartPosition: newChartPos, weeksOnChart: song.weeksOnChart + 1 };
@@ -113,7 +123,7 @@ export function useGameState() {
         ...song,
         id: `song-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         isReleased: false,
-        releaseTurn: 0, // Set upon release
+        releaseTurn: 0, 
       };
       return {
         ...prev,
@@ -135,15 +145,14 @@ export function useGameState() {
       const songToRelease = prev.songs.find(s => s.id === songId);
       if (!songToRelease) return prev;
 
-      // Simulate release impact
-      const baseImpact = 10; // Base impact for releasing a song
-      const skillBonus = prev.artist.skills / 10; // Better skills, better impact
-      const fanReaction = Math.floor(Math.random() * 40 + 60); // 60-100
-      const criticScore = Math.floor(Math.random() * 40 + 50); // 50-90
+      const baseImpact = 10; 
+      const skillBonus = prev.artist.skills / 10; 
+      const fanReaction = Math.floor(Math.random() * 40 + 60); 
+      const criticScore = Math.floor(Math.random() * 40 + 50); 
       
       const newFame = prev.artist.fame + Math.floor(baseImpact + skillBonus + (fanReaction / 20));
       const newFanbase = prev.artist.fanbase + Math.floor((fanReaction / 100) * (prev.artist.skills * 10) + Math.random() * 500);
-      const newMoney = prev.artist.money + Math.floor((Math.random() * 1000) + (criticScore / 100 * 500)); // Simplified income
+      const newMoney = prev.artist.money + Math.floor((Math.random() * 1000) + (criticScore / 100 * 500));
       
       return {
         ...prev,
@@ -159,9 +168,9 @@ export function useGameState() {
           releaseTurn: prev.currentTurn,
           fanReaction,
           criticScore,
-          currentChartPosition: Math.floor(Math.random() * 70 + 30), // Initial chart position 30-100
+          currentChartPosition: Math.floor(Math.random() * 70 + 30), 
           weeksOnChart: 0,
-          peakChartPosition: 0, // Will be updated
+          peakChartPosition: 0, 
           sales: Math.floor(Math.random() * 5000 + 1000),
         } : s),
       };
@@ -169,7 +178,7 @@ export function useGameState() {
   }, []);
 
 
-  const addAlbum = useCallback((album: Album) => { // Should be Omit<Album, 'id' | 'isReleased' | 'releaseTurn'>
+  const addAlbum = useCallback((album: Album) => { 
     setGameState(prev => ({
       ...prev,
       albums: [...prev.albums, album],
@@ -189,18 +198,17 @@ export function useGameState() {
       if (!eventToResolve || !prev.artist) return prev;
 
       let newArtistState = { ...prev.artist };
-      // Simplified outcomes - these would be specific to event types in a full game
       switch (choiceIndex) {
-        case 0: // Generally positive
+        case 0: 
           newArtistState.fame += Math.floor(Math.random() * 10 + 5);
           newArtistState.reputation = Math.min(100, newArtistState.reputation + Math.floor(Math.random() * 5 + 2));
           newArtistState.money += Math.floor(Math.random() * 200 + 50);
           break;
-        case 1: // Neutral or mixed
+        case 1: 
           newArtistState.fame += Math.floor(Math.random() * 5);
-          newArtistState.reputation += Math.floor(Math.random() * 6 - 3); // Can go up or down
+          newArtistState.reputation += Math.floor(Math.random() * 6 - 3); 
           break;
-        case 2: // Generally negative
+        case 2: 
           newArtistState.fame -= Math.floor(Math.random() * 5);
           if (newArtistState.fame < 0) newArtistState.fame = 0;
           newArtistState.reputation = Math.max(0, newArtistState.reputation - Math.floor(Math.random() * 5 + 2));
@@ -253,4 +261,4 @@ export function useGameState() {
     isLoaded 
   };
 }
-
+    
