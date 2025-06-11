@@ -3,14 +3,14 @@ import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 
+// User's provided Firebase configuration
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  apiKey: "AIzaSyCr94x5n7yGQUA8alVZwNrYzEoO2uXfMyM",
+  authDomain: "fame-factory-1sck6.firebaseapp.com",
+  projectId: "fame-factory-1sck6",
+  storageBucket: "fame-factory-1sck6.firebasestorage.app",
+  messagingSenderId: "795632417803",
+  appId: "1:795632417803:web:73ef0b813236a8f939db0e"
 };
 
 let app: FirebaseApp;
