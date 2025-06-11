@@ -1,8 +1,12 @@
+
+import type { User as FirebaseUser } from 'firebase/auth';
+
 export type Gender = 'Male' | 'Female' | 'Non-binary' | 'Prefer not to say';
 export type Genre = 'Pop' | 'Rock' | 'Hip Hop' | 'R&B' | 'Electronic' | 'Country' | 'Jazz' | 'Blues' | 'K-Pop' | 'Indie' | 'Folk' | 'Metal';
 export type MusicStyle = 'Love' | 'Party' | 'Struggle' | 'Conscious' | 'Hype' | 'Chill' | 'Experimental';
 
 export interface Artist {
+  uid: string; // Firebase User ID
   name: string;
   gender: Gender;
   genre: Genre;
@@ -89,3 +93,32 @@ export interface GameState {
 export const ALL_GENRES: Genre[] = ['Pop', 'Rock', 'Hip Hop', 'R&B', 'Electronic', 'Country', 'Jazz', 'Blues', 'K-Pop', 'Indie', 'Folk', 'Metal'];
 export const ALL_GENDERS: Gender[] = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
 export const ALL_MUSIC_STYLES: MusicStyle[] = ['Love', 'Party', 'Struggle', 'Conscious', 'Hype', 'Chill', 'Experimental'];
+
+
+// Firebase Auth Types
+export interface AuthProviderProps {
+  children: React.ReactNode;
+}
+
+// This can be more specific if you know the structure of Firebase Auth errors
+export interface AuthError extends Error {
+  code?: string;
+}
+
+export interface SignUpCredentials {
+  email: string;
+  password: string;
+}
+
+export interface SignInCredentials extends SignUpCredentials {}
+
+
+export interface AuthContextType {
+  currentUser: FirebaseUser | null;
+  loading: boolean;
+  authError: AuthError | null;
+  setAuthError: (error: AuthError | null) => void;
+  signUp: (credentials: SignUpCredentials) => Promise<void>;
+  signIn: (credentials: SignInCredentials) => Promise<void>;
+  signOut: () => Promise<void>;
+}

@@ -1,23 +1,33 @@
+
 'use client';
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGame } from '@/contexts/game-state-context';
+import { useAuth } from '@/contexts/auth-context'; // Import useAuth
 import { Loader2 } from 'lucide-react';
 
 export default function HomePage() {
   const router = useRouter();
-  const { gameState, isLoaded } = useGame();
+  const { gameState, isLoaded: gameIsLoaded } = useGame();
+  const { currentUser, loading: authIsLoading } = useAuth(); // Get auth state
 
   useEffect(() => {
-    if (isLoaded) {
-      if (gameState.artist) {
-        router.replace('/dashboard');
-      } else {
-        router.replace('/artist-genesis');
-      }
+    if (authIsLoading || !gameIsLoaded) {
+      // Wait for auth and game state to load
+      return;
     }
-  }, [isLoaded, gameState.artist, router]);
+
+    if (currentUser) {
+      if (gameState.artist) {
+        router.replace('/dashboard'); // Authenticated and artist exists
+      } else {
+        router.replace('/artist-genesis'); // Authenticated but no artist profile yet
+      }
+    } else {
+      router.replace('/login'); // Not authenticated
+    }
+  }, [authIsLoading, gameIsLoaded, currentUser, gameState.artist, router]);
 
   return (
     <div className="flex h-screen w-screen items-center justify-center bg-background">

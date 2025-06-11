@@ -18,13 +18,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useGame } from '@/contexts/game-state-context';
+import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/page-header';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Loader2 } from 'lucide-react';
 import type { Gender, Genre } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect } from 'react';
-
 
 const artistSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters.").max(50, "Name can't exceed 50 characters."),
@@ -36,7 +36,8 @@ const artistSchema = z.object({
 type ArtistFormValues = z.infer<typeof artistSchema>;
 
 export default function ArtistGenesisPage() {
-  const { createArtist, gameState, isLoaded } = useGame();
+  const { createArtist, gameState, isLoaded: gameIsLoaded } = useGame();
+  const { currentUser, loading: authIsLoading } = useAuth();
   const router = useRouter();
 
   const form = useForm<ArtistFormValues>({
@@ -50,30 +51,41 @@ export default function ArtistGenesisPage() {
   });
 
   useEffect(() => {
-    // If an artist already exists, redirect to dashboard. This prevents re-running genesis.
-    if (isLoaded && gameState.artist) {
-      router.replace('/dashboard');
+    if (authIsLoading || !gameIsLoaded) {
+      return; // Wait for auth and game state to be ready
     }
-  }, [isLoaded, gameState.artist, router]);
+    if (!currentUser) {
+      router.replace('/login'); // Not authenticated, go to login
+      return;
+    }
+    if (currentUser && gameState.artist) {
+      router.replace('/dashboard'); // Authenticated and artist exists, go to dashboard
+    }
+  }, [currentUser, authIsLoading, gameState.artist, gameIsLoaded, router]);
+
 
   function onSubmit(values: ArtistFormValues) {
-    createArtist({
+    if (!currentUser) {
+      // Should not happen if effects above are working
+      router.push('/login');
+      return;
+    }
+    createArtist({ // uid will be added by createArtist internally
       name: values.name,
-      gender: values.gender as Gender, // Cast after validation
-      genre: values.genre as Genre, // Cast after validation
+      gender: values.gender as Gender,
+      genre: values.genre as Genre,
       backstory: values.backstory,
     });
-    router.push('/dashboard');
+    router.push('/dashboard'); // Go to dashboard after creation
   }
   
-  if (!isLoaded) {
-    return <div className="flex h-full items-center justify-center"><UserPlus className="h-8 w-8 animate-pulse text-primary" /></div>;
+  if (authIsLoading || !gameIsLoaded) {
+    return <div className="flex h-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /> Loading...</div>;
   }
 
-  // If an artist already exists and we're redirecting, show a loader.
-  // The useEffect above will handle the actual redirection.
-  if (gameState.artist) {
-     return <div className="flex h-full items-center justify-center"><UserPlus className="h-8 w-8 animate-pulse text-primary" /> Loading...</div>;
+  // If already redirected by useEffect, show loader.
+  if (!currentUser || (currentUser && gameState.artist)) {
+     return <div className="flex h-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /> Checking your profile...</div>;
   }
 
 

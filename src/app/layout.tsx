@@ -1,6 +1,8 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { GameStateProvider } from '@/contexts/game-state-context';
+import { AuthProvider } from '@/contexts/auth-context'; // Import AuthProvider
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
@@ -23,10 +25,12 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased bg-background text-foreground min-h-screen flex flex-col">
-        <GameStateProvider>
-          {children}
-          <Toaster />
-        </GameStateProvider>
+        <AuthProvider> {/* Wrap GameStateProvider with AuthProvider */}
+          <GameStateProvider>
+            {children}
+            <Toaster />
+          </GameStateProvider>
+        </AuthProvider>
       </body>
     </html>
   );

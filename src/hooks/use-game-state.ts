@@ -1,15 +1,16 @@
 
 'use client';
 
-import type { Artist, GameState, Song, Album, ActiveEvent, MusicStyle, Genre, Gender } from '@/types';
+import type { Artist, GameState, Song, Album, ActiveEvent } from '@/types';
 import { useState, useEffect, useCallback } from 'react';
 import { ALL_GENDERS, ALL_GENRES, ALL_MUSIC_STYLES } from '@/types';
+import { useAuth } from '@/contexts/auth-context';
+import { db } from '@/lib/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
-const LOCAL_STORAGE_KEY = 'fameFactoryGameState_v1'; // Added versioning
-
-const initialArtistSkills = 5; // Start low, player needs to improve
+const initialArtistSkills = 5;
 const initialArtistMoney = 1000;
-const initialArtistReputation = 50; // Neutral start
+const initialArtistReputation = 50;
 
 export const initialGameState: GameState = {
   artist: null,
@@ -26,63 +27,85 @@ export const initialGameState: GameState = {
 
 export function useGameState() {
   const [gameState, setGameState] = useState<GameState>(initialGameState);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false); // Tracks if initial game state load (from Firestore or default) is complete
+  const { currentUser, loading: authLoading } = useAuth();
 
+  // Load game state from Firestore when user logs in or auth state changes
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const storedState = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (storedState) {
-          try {
-            const parsedState = JSON.parse(storedState);
-            setGameState(parsedState);
-          } catch (parseError) {
-            console.error("Failed to parse game state from localStorage", parseError);
-            localStorage.removeItem(LOCAL_STORAGE_KEY); 
-            setGameState(initialGameState); 
+    if (authLoading) {
+      setIsLoaded(false); // Ensure we show loading until auth is resolved
+      return;
+    }
+
+    if (currentUser) {
+      const userGameStateRef = doc(db, 'users', currentUser.uid, 'gameState');
+      getDoc(userGameStateRef)
+        .then((docSnap) => {
+          if (docSnap.exists()) {
+            setGameState(docSnap.data() as GameState);
+          } else {
+            // No saved state, start fresh but keep user logged in
+            setGameState({...initialGameState, artist: null}); // Ensure artist is null for new users
           }
-        } else {
-          setGameState(initialGameState);
-        }
-      } catch (storageAccessError) {
-        console.error("Error accessing localStorage during load:", storageAccessError);
-        setGameState(initialGameState);
-      } finally {
-        setIsLoaded(true);
-      }
+        })
+        .catch((error) => {
+          console.error("Error fetching game state from Firestore:", error);
+          setGameState({...initialGameState, artist: null});
+        })
+        .finally(() => {
+          setIsLoaded(true);
+        });
+    } else {
+      // No user logged in, reset to initial state
+      setGameState(initialGameState);
+      setIsLoaded(true); // Consider loaded as there's no user data to fetch
     }
-  }, []);
+  }, [currentUser, authLoading]);
 
+  // Save game state to Firestore whenever it changes and user is logged in
   useEffect(() => {
-    if (isLoaded && typeof window !== 'undefined') {
-      try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(gameState));
-      } catch (storageSaveError) {
-        console.error("Error saving game state to localStorage:", storageSaveError);
+    if (currentUser && isLoaded && !authLoading) { // Only save if loaded, user exists, and auth isn't processing
+      // Avoid saving during initial load before gameState is truly reflective of current user
+      if (gameState !== initialGameState || gameState.artist !== null) { 
+        const userGameStateRef = doc(db, 'users', currentUser.uid, 'gameState');
+        setDoc(userGameStateRef, gameState, { merge: true }) // Use merge: true to avoid overwriting if not all fields are present
+          .catch((error) => {
+            console.error("Error saving game state to Firestore:", error);
+          });
       }
     }
-  }, [gameState, isLoaded]);
+  }, [gameState, currentUser, isLoaded, authLoading]);
 
-  const createArtist = useCallback((artistDetails: Omit<Artist, 'fame' | 'skills' | 'fanbase' | 'money' | 'reputation'>) => {
+  const createArtist = useCallback((artistDetails: Omit<Artist, 'fame' | 'skills' | 'fanbase' | 'money' | 'reputation' | 'uid'>) => {
+    if (!currentUser) {
+      console.error("Cannot create artist: no user logged in.");
+      return;
+    }
     setGameState(prev => ({
-      ...initialGameState, 
-      currentTurn: 1, // Ensure turn resets for a new game
+      ...initialGameState, // Start from a clean slate except for user-specifics
+      currentTurn: 1,
       artist: {
         ...artistDetails,
+        uid: currentUser.uid, // Associate artist with the logged-in user
         fame: 0,
         skills: initialArtistSkills,
         fanbase: 0,
         money: initialArtistMoney,
         reputation: initialArtistReputation,
       },
+      // Reset other game-specific arrays for a new artist profile under this user
+      songs: [],
+      albums: [],
+      activeEvents: [],
+      eventHistory: [],
     }));
-  }, []);
+  }, [currentUser]);
 
   const nextTurn = useCallback(() => {
     setGameState(prev => {
       if (!prev.artist) return prev;
       
-      let newMoney = prev.artist.money - 50;
+      let newMoney = prev.artist.money - 50; // Basic weekly expenses
       if (newMoney < 0) newMoney = 0; 
 
       let newFame = prev.artist.fame;
@@ -152,7 +175,7 @@ export function useGameState() {
       
       const newFame = prev.artist.fame + Math.floor(baseImpact + skillBonus + (fanReaction / 20));
       const newFanbase = prev.artist.fanbase + Math.floor((fanReaction / 100) * (prev.artist.skills * 10) + Math.random() * 500);
-      const newMoney = prev.artist.money + Math.floor((Math.random() * 1000) + (criticScore / 100 * 500));
+      const newMoney = prev.artist.money + Math.floor(Math.random() * 1000 + (criticScore / 100 * 500));
       
       return {
         ...prev,
@@ -258,7 +281,6 @@ export function useGameState() {
     addActiveEvent, 
     resolveActiveEvent, 
     updateArtistStats, 
-    isLoaded 
+    isLoaded // This reflects game state loading, auth state is in useAuth().loading
   };
 }
-    
