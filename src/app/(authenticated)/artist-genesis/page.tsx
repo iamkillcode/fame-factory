@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,6 +23,7 @@ import { PageHeader } from '@/components/page-header';
 import { UserPlus } from 'lucide-react';
 import type { Gender, Genre } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect } from 'react';
 
 
 const artistSchema = z.object({
@@ -47,6 +49,13 @@ export default function ArtistGenesisPage() {
     },
   });
 
+  useEffect(() => {
+    // If an artist already exists, redirect to dashboard. This prevents re-running genesis.
+    if (isLoaded && gameState.artist) {
+      router.replace('/dashboard');
+    }
+  }, [isLoaded, gameState.artist, router]);
+
   function onSubmit(values: ArtistFormValues) {
     createArtist({
       name: values.name,
@@ -60,9 +69,10 @@ export default function ArtistGenesisPage() {
   if (!isLoaded) {
     return <div className="flex h-full items-center justify-center"><UserPlus className="h-8 w-8 animate-pulse text-primary" /></div>;
   }
-  // If an artist already exists, redirect to dashboard. This prevents re-running genesis.
+
+  // If an artist already exists and we're redirecting, show a loader.
+  // The useEffect above will handle the actual redirection.
   if (gameState.artist) {
-     router.replace('/dashboard');
      return <div className="flex h-full items-center justify-center"><UserPlus className="h-8 w-8 animate-pulse text-primary" /> Loading...</div>;
   }
 
