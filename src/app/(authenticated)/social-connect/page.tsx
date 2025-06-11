@@ -1,14 +1,15 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useGame } from '@/contexts/game-state-context';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, TrendingUp, RadioTower, Send, Heart, Repeat2, MessageSquare, Users, Loader2 } from 'lucide-react';
+import { Network, TrendingUp, RadioTower, Send, Heart, Repeat2, MessageSquare, Users, Loader2 } from 'lucide-react'; // Changed MessageCircle to Network
 import { SectionCard } from '@/components/section-card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/input'; // Keep for potential future use, not directly used now
 import { useToast } from '@/hooks/use-toast';
 import type { Song } from '@/types';
 
@@ -87,8 +88,8 @@ export default function SocialConnectPage() {
       setPosts(prevPosts => [newArtistPost, ...prevPosts]);
       setNewPostContent('');
       setIsPosting(false);
-      toast({ title: "Post Published!", description: "Your fans will see your update." });
-      updateArtistStats({ fame: 1, reputation: 0.5 }); // Small boost for engagement
+      toast({ title: "Post Published!", description: "Your update is live on XConnect." });
+      updateArtistStats({ fame: 1, reputation: 0.5 }); 
     }, 1000);
   };
   
@@ -108,9 +109,9 @@ export default function SocialConnectPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Social Connect"
-        description="Engage with your fans, hype releases, and build your online presence."
-        icon={MessageCircle}
+        title="XConnect"
+        description="Engage with your fans, share updates, and build your online presence on XConnect."
+        icon={Network}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -129,14 +130,14 @@ export default function SocialConnectPage() {
               <Textarea
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
-                placeholder={`What's happening, ${artistName}?`}
+                placeholder="What's happening?"
                 className="min-h-[100px] flex-1 bg-background/50 focus:bg-background"
                 rows={3}
               />
             </div>
           </SectionCard>
 
-          <SectionCard title="Fan Feed">
+          <SectionCard title="Feed">
             <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
               {posts.map(post => (
                 <div key={post.id} className={`p-4 rounded-lg border ${post.isArtistPost ? 'bg-primary/10 border-primary/30' : 'bg-card/50 border-border/30'}`}>

@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
-import { Home, Wand2, Library, MessageCircle, Zap, UserPlus, Settings } from 'lucide-react';
-import { useSidebar } from '@/components/ui/sidebar'; // Assuming this hook exists and provides `state`
+import { Home, Wand2, Library, Network, Zap, UserPlus, Settings } from 'lucide-react'; // Changed MessageCircle to Network
+import { useSidebar } from '@/components/ui/sidebar'; 
 
 interface NavItem {
   href: string;
@@ -19,15 +19,15 @@ const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
   { href: '/music-forge', label: 'Music Forge', icon: Wand2 },
   { href: '/music-manager', label: 'Music Manager', icon: Library },
-  { href: '/social-connect', label: 'Social Connect', icon: MessageCircle },
+  { href: '/social-connect', label: 'XConnect', icon: Network }, // Updated Label and Icon
   { href: '/events', label: 'Events', icon: Zap },
-  // { href: '/artist-genesis', label: 'New Artist', icon: UserPlus }, // Typically for initial setup
+  // { href: '/artist-genesis', label: 'New Artist', icon: UserPlus }, 
   // { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export function SidebarNav() {
   const pathname = usePathname();
-  const { state: sidebarState } = useSidebar(); // 'expanded' or 'collapsed'
+  const { state: sidebarState } = useSidebar(); 
   const collapsed = sidebarState === 'collapsed';
 
   return (
