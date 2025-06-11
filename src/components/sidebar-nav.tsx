@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
-import { Home, Wand2, Library, Network, Zap, PlaySquare, Disc3 } from 'lucide-react'; // Added PlaySquare, Disc3
+import { Home, Wand2, Library, Network, Zap, PlaySquare, Disc3 } from 'lucide-react'; 
 import { useSidebar } from '@/components/ui/sidebar'; 
 
 interface NavItem {
@@ -21,7 +21,7 @@ const navItems: NavItem[] = [
   { href: '/music-manager', label: 'Music Manager', icon: Library },
   { href: '/social-connect', label: 'XConnect', icon: Network },
   { href: '/events', label: 'Events', icon: Zap },
-  { href: '/tune-stream', label: 'TuneStream', icon: PlaySquare },
+  { href: '/tunify', label: 'Tunify', icon: PlaySquare },
   { href: '/music-verse', label: 'MusicVerse', icon: Disc3 },
   // { href: '/artist-genesis', label: 'New Artist', icon: UserPlus }, 
   // { href: '/settings', label: 'Settings', icon: Settings },
