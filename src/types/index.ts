@@ -2,7 +2,7 @@
 import type { User as FirebaseUser } from 'firebase/auth';
 
 export type Gender = 'Male' | 'Female' | 'Non-binary' | 'Prefer not to say';
-export type Genre = 'Pop' | 'Rock' | 'Hip Hop' | 'R&B' | 'Electronic' | 'Country' | 'Jazz' | 'Blues' | 'K-Pop' | 'Indie' | 'Folk' | 'Metal';
+export type Genre = 'Pop' | 'Rock' | 'Hip Hop' | 'R&B' | 'Electronic' | 'Country' | 'Jazz' | 'Blues' | 'K-Pop' | 'Indie' | 'Folk' | 'Metal' | 'Rap';
 export type MusicStyle = 'Love' | 'Party' | 'Struggle' | 'Conscious' | 'Hype' | 'Chill' | 'Experimental';
 
 export interface Artist {
@@ -10,7 +10,7 @@ export interface Artist {
   name: string;
   gender: Gender;
   genre: Genre;
-  backstory: string;
+  backstory?: string; // Made optional
   fame: number; // 0-1000
   skills: number; // 0-100 (Overall skill level: vocals, songwriting, stage presence)
   fanbase: number; // Number of fans
@@ -90,7 +90,7 @@ export interface GameState {
   availableGenders: Gender[];
 }
 
-export const ALL_GENRES: Genre[] = ['Pop', 'Rock', 'Hip Hop', 'R&B', 'Electronic', 'Country', 'Jazz', 'Blues', 'K-Pop', 'Indie', 'Folk', 'Metal'];
+export const ALL_GENRES: Genre[] = ['Pop', 'Rock', 'Hip Hop', 'R&B', 'Electronic', 'Country', 'Jazz', 'Blues', 'K-Pop', 'Indie', 'Folk', 'Metal', 'Rap'];
 export const ALL_GENDERS: Gender[] = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
 export const ALL_MUSIC_STYLES: MusicStyle[] = ['Love', 'Party', 'Struggle', 'Conscious', 'Hype', 'Chill', 'Experimental'];
 

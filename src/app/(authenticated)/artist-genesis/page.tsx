@@ -30,7 +30,7 @@ const artistSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters.").max(50, "Name can't exceed 50 characters."),
   gender: z.string().nonempty("Please select a gender."),
   genre: z.string().nonempty("Please select a genre."),
-  backstory: z.string().min(10, "Backstory needs some substance! (min 10 chars)").max(500, "Keep backstory concise (max 500 chars)."),
+  backstory: z.string().max(500, "Keep backstory concise (max 500 chars).").optional(),
 });
 
 type ArtistFormValues = z.infer<typeof artistSchema>;
@@ -52,38 +52,36 @@ export default function ArtistGenesisPage() {
 
   useEffect(() => {
     if (authIsLoading || !gameIsLoaded) {
-      return; // Wait for auth and game state to be ready
+      return; 
     }
     if (!currentUser) {
-      router.replace('/login'); // Not authenticated, go to login
+      router.replace('/login'); 
       return;
     }
     if (currentUser && gameState.artist) {
-      router.replace('/dashboard'); // Authenticated and artist exists, go to dashboard
+      router.replace('/dashboard'); 
     }
   }, [currentUser, authIsLoading, gameState.artist, gameIsLoaded, router]);
 
 
   function onSubmit(values: ArtistFormValues) {
     if (!currentUser) {
-      // Should not happen if effects above are working
       router.push('/login');
       return;
     }
-    createArtist({ // uid will be added by createArtist internally
+    createArtist({ 
       name: values.name,
       gender: values.gender as Gender,
       genre: values.genre as Genre,
-      backstory: values.backstory,
+      backstory: values.backstory, // Will be string or undefined
     });
-    router.push('/dashboard'); // Go to dashboard after creation
+    router.push('/dashboard'); 
   }
   
   if (authIsLoading || !gameIsLoaded) {
     return <div className="flex h-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /> Loading...</div>;
   }
 
-  // If already redirected by useEffect, show loader.
   if (!currentUser || (currentUser && gameState.artist)) {
      return <div className="flex h-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /> Checking your profile...</div>;
   }
@@ -164,15 +162,15 @@ export default function ArtistGenesisPage() {
                 name="backstory"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-foreground/80">Backstory</FormLabel>
+                    <FormLabel className="text-foreground/80">Backstory (Optional)</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Describe your artist's origins, motivations, and early life..."
+                        placeholder="Describe your artist's origins, motivations, and early life... or leave it to fate!"
                         className="resize-y min-h-[120px] bg-background/50 focus:bg-background"
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription>A brief history to shape your artist's narrative.</FormDescription>
+                    <FormDescription>A brief history to shape your artist's narrative. Can be developed over time.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
