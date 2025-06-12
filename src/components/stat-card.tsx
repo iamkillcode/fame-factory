@@ -1,6 +1,8 @@
+
 import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { memo } from 'react';
 
 interface StatCardProps {
   title: string;
@@ -12,7 +14,7 @@ interface StatCardProps {
   description?: string;
 }
 
-export function StatCard({ title, value, icon: Icon, className, iconClassName, valueClassName, description }: StatCardProps) {
+const StatCardComponent = ({ title, value, icon: Icon, className, iconClassName, valueClassName, description }: StatCardProps) => {
   return (
     <Card className={cn("glassy-card overflow-hidden", className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -25,4 +27,6 @@ export function StatCard({ title, value, icon: Icon, className, iconClassName, v
       </CardContent>
     </Card>
   );
-}
+};
+
+export const StatCard = memo(StatCardComponent);

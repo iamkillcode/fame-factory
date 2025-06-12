@@ -21,9 +21,10 @@ import { AVAILABLE_TRAINING_ACTIVITIES } from '@/hooks/use-game-state';
 import type { TrainingActivity } from '@/types';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { memo, useCallback } from 'react';
 
 
-const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
+const CustomTooltipComponent = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
   if (active && payload && payload.length) {
     return (
       <div className="p-2 bg-popover/80 backdrop-blur-sm shadow-lg rounded-md border border-border text-popover-foreground">
@@ -38,6 +39,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameT
   }
   return null;
 };
+const CustomTooltip = memo(CustomTooltipComponent);
 
 const activityIcons: Record<string, React.ElementType> = {
   vocal_training: Palette,
@@ -59,7 +61,7 @@ export default function DashboardPage() {
 
   const { artist, currentTurn, songs, selectedActivityId } = gameState;
 
-  const handleSelectActivity = (activity: TrainingActivity) => {
+  const handleSelectActivity = useCallback((activity: TrainingActivity) => {
     if (artist.money < activity.cost) {
       toast({
         title: "Not enough funds",
@@ -73,7 +75,7 @@ export default function DashboardPage() {
         title: "Activity Selected",
         description: `${activity.name} is planned for this week.`,
     })
-  };
+  }, [artist.money, selectWeeklyActivity, toast]);
 
   const chartData = [
     { name: 'Fame', value: artist.fame, fill: "hsl(var(--chart-1))" },
@@ -226,4 +228,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

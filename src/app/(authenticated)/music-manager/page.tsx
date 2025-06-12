@@ -22,8 +22,9 @@ import {
 import { Line, LineChart as RechartsLineChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, TooltipProps } from "recharts"
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import { cn } from '@/lib/utils';
+import { memo, useCallback } from 'react';
 
-const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
+const CustomTooltipComponent = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
   if (active && payload && payload.length) {
     return (
       <div className="p-2 bg-popover/80 backdrop-blur-sm shadow-lg rounded-md border border-border text-popover-foreground">
@@ -38,6 +39,8 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameT
   }
   return null;
 };
+const CustomTooltip = memo(CustomTooltipComponent);
+
 
 const productionUpgradeCosts = {
     Medium: 500,
@@ -58,16 +61,16 @@ export default function MusicManagerPage() {
   const releasedSongs = gameState.songs.filter(s => s.isReleased).sort((a,b) => b.releaseTurn - a.releaseTurn);
   const artistMoney = gameState.artist.money;
 
-  const handleReleaseSong = (songId: string) => {
+  const handleReleaseSong = useCallback((songId: string) => {
     releaseSong(songId);
-    const releasedSongDetails = gameState.songs.find(s => s.id === songId); // Find again from potentially updated state
+    const releasedSongDetails = gameState.songs.find(s => s.id === songId); 
     toast({
       title: "Song Released!",
       description: `${releasedSongDetails?.title || 'Your song'} is now out for the world to hear! (Quality: ${releasedSongDetails?.productionQuality})`,
     });
-  };
+  }, [releaseSong, gameState.songs, toast]);
 
-  const handleInvestInProduction = (songId: string, qualityLevel: 'Medium' | 'High') => {
+  const handleInvestInProduction = useCallback((songId: string, qualityLevel: 'Medium' | 'High') => {
     let cost = 0;
     const song = unreleasedSongs.find(s => s.id === songId);
     if (!song) return;
@@ -84,20 +87,21 @@ export default function MusicManagerPage() {
     }
     investInSongProduction(songId, qualityLevel);
     toast({ title: "Production Upgraded!", description: `Invested $${cost} in "${song.title}" for ${qualityLevel} quality.`});
-  };
+  }, [unreleasedSongs, artistMoney, investInSongProduction, toast]);
   
-  const getSongChartPerformance = (song: Song) => {
+  const getSongChartPerformance = useCallback((song: Song) => {
     if (!song.isReleased || !song.weeksOnChart || song.weeksOnChart < 1) return [];
     let data = [];
     let currentPos = song.peakChartPosition || song.currentChartPosition || Math.floor(Math.random() * 50 + 50); 
     for (let i = 0; i <= song.weeksOnChart; i++) {
         data.push({ week: song.releaseTurn + i, position: currentPos });
+        // Simulate chart movement - this could be more sophisticated
         currentPos += Math.floor(Math.random() * 10 - 5 + (song.productionQuality === 'High' ? -1 : song.productionQuality === 'Medium' ? 0 : 1) ); // Quality influence
         if (currentPos < 1) currentPos = 1;
         if (currentPos > 100) currentPos = 100; 
     }
     return data;
-  }
+  }, []); // Empty dependency array, assuming song properties used inside are stable per song object
 
   const chartConfig = {
     position: {
@@ -128,9 +132,9 @@ export default function MusicManagerPage() {
         <TabsContent value="unreleased" className="mt-6">
           <SectionCard title="Ready for Release?" description="Enhance production quality before releasing your tracks.">
             {unreleasedSongs.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
+              <div className="text-muted-foreground text-center py-8">
                 No unreleased tracks. <Link href="/music-forge" className="text-primary hover:underline">Go create some hits!</Link>
-              </p>
+              </div>
             ) : (
               <ScrollArea className="h-[500px] pr-4">
                 <div className="space-y-4">
@@ -195,7 +199,7 @@ export default function MusicManagerPage() {
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
                         <div>
                           <h3 className="text-lg font-semibold text-foreground">{song.title}</h3>
-                          <p className="text-sm text-muted-foreground">Released: Week {song.releaseTurn} | Style: {song.style}</p>
+                          <div className="text-sm text-muted-foreground">Released: Week {song.releaseTurn} | Style: {song.style}</div>
                           <div className="text-sm text-muted-foreground">Production: <Badge variant={song.productionQuality === 'High' ? 'default' : song.productionQuality === 'Medium' ? 'secondary' : 'outline'} className={cn(song.productionQuality === 'High' && "bg-green-500 text-white")}>{song.productionQuality}</Badge></div>
                         </div>
                         {song.currentChartPosition && (
@@ -205,9 +209,9 @@ export default function MusicManagerPage() {
                         )}
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm mb-3">
-                        <p>Fan Reaction: <span className="font-semibold text-primary">{song.fanReaction || 'N/A'}%</span></p>
-                        <p>Critic Score: <span className="font-semibold text-primary">{song.criticScore || 'N/A'}%</span></p>
-                        <p>Sales/Streams: <span className="font-semibold text-primary">{song.sales?.toLocaleString() || 'N/A'}</span></p>
+                        <div>Fan Reaction: <span className="font-semibold text-primary">{song.fanReaction || 'N/A'}%</span></div>
+                        <div>Critic Score: <span className="font-semibold text-primary">{song.criticScore || 'N/A'}%</span></div>
+                        <div>Sales/Streams: <span className="font-semibold text-primary">{song.sales?.toLocaleString() || 'N/A'}</span></div>
                       </div>
                       {performanceData.length > 0 && (
                         <div>
@@ -234,4 +238,3 @@ export default function MusicManagerPage() {
     </div>
   );
 }
-

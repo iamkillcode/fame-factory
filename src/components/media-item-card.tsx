@@ -6,6 +6,7 @@ import type { Song, Album } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Users, BarChart3, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { memo } from 'react';
 
 interface MediaItemCardProps {
   item: Song | Album;
@@ -13,7 +14,7 @@ interface MediaItemCardProps {
   className?: string;
 }
 
-export function MediaItemCard({ item, artistName, className }: MediaItemCardProps) {
+const MediaItemCardComponent = ({ item, artistName, className }: MediaItemCardProps) => {
   const isSong = 'lyrics' in item; // Type guard to differentiate Song from Album
   const placeholderSize = isSong ? "100" : "150";
   const coverArtHint = isSong ? "abstract pattern" : "album cover";
@@ -85,4 +86,6 @@ export function MediaItemCard({ item, artistName, className }: MediaItemCardProp
       </CardContent>
     </Card>
   );
-}
+};
+
+export const MediaItemCard = memo(MediaItemCardComponent);

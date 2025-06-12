@@ -1,5 +1,7 @@
+
 import { cn } from '@/lib/utils';
 import type { ReactNode } from 'react';
+import { memo } from 'react';
 
 interface SectionCardProps {
   title?: string;
@@ -10,7 +12,7 @@ interface SectionCardProps {
   action?: ReactNode;
 }
 
-export function SectionCard({ title, description, children, className, titleClassName, action }: SectionCardProps) {
+const SectionCardComponent = ({ title, description, children, className, titleClassName, action }: SectionCardProps) => {
   return (
     <div className={cn('glassy-card p-6 shadow-lg', className)}>
       {(title || action) && (
@@ -29,4 +31,6 @@ export function SectionCard({ title, description, children, className, titleClas
       <div>{children}</div>
     </div>
   );
-}
+};
+
+export const SectionCard = memo(SectionCardComponent);

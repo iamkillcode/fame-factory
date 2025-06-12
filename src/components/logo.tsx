@@ -1,7 +1,14 @@
+
 import { Music2 } from 'lucide-react';
 import Link from 'next/link';
+import type { ComponentProps } from 'react';
+import { memo } from 'react';
 
-export function Logo({ collapsed }: { collapsed?: boolean }) {
+interface LogoProps {
+  collapsed?: boolean;
+}
+
+const LogoComponent = ({ collapsed }: LogoProps) => {
   return (
     <Link href="/dashboard" className="flex items-center gap-2 px-2 py-4 text-sidebar-foreground hover:text-sidebar-primary transition-colors">
       <Music2 className={`h-8 w-8 ${collapsed ? 'mx-auto' : ''} text-primary`} />
@@ -12,4 +19,6 @@ export function Logo({ collapsed }: { collapsed?: boolean }) {
       )}
     </Link>
   );
-}
+};
+
+export const Logo = memo(LogoComponent);

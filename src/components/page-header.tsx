@@ -1,4 +1,7 @@
+
 import type { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { memo } from 'react';
 
 interface PageHeaderProps {
   title: string;
@@ -7,7 +10,7 @@ interface PageHeaderProps {
   children?: React.ReactNode; // For actions like buttons
 }
 
-export function PageHeader({ title, description, icon: Icon, children }: PageHeaderProps) {
+const PageHeaderComponent = ({ title, description, icon: Icon, children }: PageHeaderProps) => {
   return (
     <div className="mb-8 border-b border-border/50 pb-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -28,4 +31,6 @@ export function PageHeader({ title, description, icon: Icon, children }: PageHea
       </div>
     </div>
   );
-}
+};
+
+export const PageHeader = memo(PageHeaderComponent);
