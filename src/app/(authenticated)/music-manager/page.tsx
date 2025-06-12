@@ -141,10 +141,10 @@ export default function MusicManagerPage() {
                           <h3 className="text-lg font-semibold text-foreground">{song.title}</h3>
                           <p className="text-sm text-muted-foreground">Style: {song.style} | Theme: {song.theme}</p>
                           <p className="text-xs text-muted-foreground font-code truncate max-w-xs md:max-w-sm" title={song.beat}>Beat: {song.beat}</p>
-                          <p className="text-sm text-muted-foreground mt-1">
+                          <div className="text-sm text-muted-foreground mt-1">
                             Production Quality: <Badge variant={song.productionQuality === 'High' ? 'default' : song.productionQuality === 'Medium' ? 'secondary' : 'outline'} className={cn(song.productionQuality === 'High' && "bg-green-500 text-white")}>{song.productionQuality}</Badge>
                             {song.productionInvestment > 0 && ` ($${song.productionInvestment} Invested)`}
-                          </p>
+                          </div>
                         </div>
                         <Button onClick={() => handleReleaseSong(song.id)} size="sm" className="btn-glossy-accent shrink-0 w-full sm:w-auto">
                           <UploadCloud className="mr-2 h-4 w-4" /> Release Song
@@ -196,7 +196,7 @@ export default function MusicManagerPage() {
                         <div>
                           <h3 className="text-lg font-semibold text-foreground">{song.title}</h3>
                           <p className="text-sm text-muted-foreground">Released: Week {song.releaseTurn} | Style: {song.style}</p>
-                          <p className="text-sm text-muted-foreground">Production: <Badge variant={song.productionQuality === 'High' ? 'default' : song.productionQuality === 'Medium' ? 'secondary' : 'outline'} className={cn(song.productionQuality === 'High' && "bg-green-500 text-white")}>{song.productionQuality}</Badge></p>
+                          <div className="text-sm text-muted-foreground">Production: <Badge variant={song.productionQuality === 'High' ? 'default' : song.productionQuality === 'Medium' ? 'secondary' : 'outline'} className={cn(song.productionQuality === 'High' && "bg-green-500 text-white")}>{song.productionQuality}</Badge></div>
                         </div>
                         {song.currentChartPosition && (
                           <Badge variant="default" className="bg-primary/80 text-primary-foreground">
