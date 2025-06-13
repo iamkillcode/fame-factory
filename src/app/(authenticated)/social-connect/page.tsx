@@ -71,7 +71,7 @@ export default function SocialConnectPage() {
   const handleCreatePost = () => {
     if (!newPostContent.trim()) return;
     setIsPosting(true);
-    
+
     const newArtistPost: SocialPost = {
       id: `post-${Date.now()}-artist`,
       user: { name: artistName, handle: artistHandle, avatarSeed: artistName },
@@ -89,14 +89,14 @@ export default function SocialConnectPage() {
       setNewPostContent('');
       setIsPosting(false);
       toast({ title: "Post Published!", description: "Your update is live on XConnect." });
-      updateArtistStats({ fame: 1, reputation: 0.5 }); 
+      updateArtistStats({ fame: 1, reputation: 0.5 });
     }, 1000);
   };
-  
+
   const releasedSongs = gameState.songs.filter(s => s.isReleased);
 
   const hypeRelease = (song: Song) => {
-    setNewPostContent(`🚀 Big news! My new track "${song.title}" is out now! 🔥 Go stream it everywhere! #NewMusic #${artistHandle} #${song.style}`);
+    setNewPostContent(`🚀 Big news! My new track "${song.title}" is out now! 🔥 Go stream it everywhere! #NewMusic #${artistHandle} #${song.genre}`);
     toast({ title: "Hype Post Drafted!", description: "Content added to post box. Hit send!"});
   };
 
@@ -176,7 +176,7 @@ export default function SocialConnectPage() {
                    </Button>
                 ))
               ) : <p className="text-xs text-muted-foreground">No songs released yet to hype.</p>}
-              
+
               <h4 className="text-sm font-semibold text-muted-foreground mt-4">Engage Fans:</h4>
               <Button variant="outline" onClick={startTrend} className="w-full justify-start glassy-card hover:bg-primary/10">
                 <TrendingUp className="mr-2 h-4 w-4 text-primary" /> Start a Trend

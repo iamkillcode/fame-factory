@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
-import { Home, Wand2, Library, Network, Zap, PlaySquare, Disc3 } from 'lucide-react'; 
-import { useSidebar } from '@/components/ui/sidebar'; 
+import { Home, Library, Network, Zap, PlaySquare, Disc3, Music } from 'lucide-react';
+import { useSidebar } from '@/components/ui/sidebar';
 
 interface NavItem {
   href: string;
@@ -17,19 +17,19 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
-  { href: '/music-forge', label: 'Music Forge', icon: Wand2 },
+  { href: '/write-songs', label: 'Write Songs', icon: Music },
   { href: '/music-manager', label: 'Music Manager', icon: Library },
   { href: '/social-connect', label: 'XConnect', icon: Network },
   { href: '/events', label: 'Events', icon: Zap },
   { href: '/tunify', label: 'Tunify', icon: PlaySquare },
   { href: '/music-verse', label: 'MusicVerse', icon: Disc3 },
-  // { href: '/artist-genesis', label: 'New Artist', icon: UserPlus }, 
+  // { href: '/artist-genesis', label: 'New Artist', icon: UserPlus },
   // { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export function SidebarNav() {
   const pathname = usePathname();
-  const { state: sidebarState } = useSidebar(); 
+  const { state: sidebarState } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
 
   return (

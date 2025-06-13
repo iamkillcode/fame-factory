@@ -56,7 +56,7 @@ export const initialGameState: GameState = {
 const generateInitialNPCSongs = (npcArtists: NPCArtist[], currentTurn: number): NPCSong[] => {
     const songs: NPCSong[] = [];
     const songTitlesBank = ["Echoes in Time", "Neon Nights", "City Dreams", "Lost Stars", "Velvet Moon", "Quantum Leap", "Silent Sirens", "Rebel Heart", "Midnight Drive", "Golden Hour", "Forgotten Melody", "Electric Pulse", "Cosmic Dance", "Urban Canvas", "Wildfire Soul"];
-    
+
     npcArtists.forEach(artist => {
         const numSongs = Math.floor(Math.random() * 2) + 1; // 1-2 songs per NPC
         for (let i = 0; i < numSongs; i++) {
@@ -84,7 +84,7 @@ export function useGameState() {
   const { currentUser, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
-  useEffect(() => {
+ useEffect(() => {
     if (authLoading) {
       setIsLoaded(false);
       return;
@@ -97,17 +97,18 @@ export function useGameState() {
         .then((docSnap) => {
           let finalState: GameState;
           if (docSnap.exists()) {
-            const loadedData = docSnap.data() as GameState;
+            const loadedData = docSnap.data() as Partial<GameState>; // Load as partial to safely merge
             
             let npcArtists = loadedData.npcArtists && loadedData.npcArtists.length > 0 ? loadedData.npcArtists : NPC_ARTIST_POOL_DATA.map((na, index) => ({ id: `npc-${index}`, ...na }));
             let npcSongs = loadedData.npcSongs && loadedData.npcSongs.length > 0 ? loadedData.npcSongs : generateInitialNPCSongs(npcArtists, loadedData.currentTurn || 1);
 
             finalState = {
-              ...initialGameState,
-              ...loadedData,
+              ...initialGameState, // Start with full initial state
+              ...loadedData,       // Override with loaded data
               artist: loadedData.artist || null,
               songs: loadedData.songs ? loadedData.songs.map(s => ({
                 ...s,
+                genre: s.genre || ALL_GENRES[0], // Ensure genre exists, default if not
                 productionQuality: s.productionQuality || 'Low',
                 productionInvestment: s.productionInvestment || 0,
               })) : [],
@@ -118,7 +119,6 @@ export function useGameState() {
               selectedActivityId: loadedData.selectedActivityId || null,
               npcArtists: npcArtists,
               npcSongs: npcSongs,
-              // Ensure these always have defaults if not in saved data
               availableMusicStyles: loadedData.availableMusicStyles || initialGameState.availableMusicStyles,
               availableGenres: loadedData.availableGenres || initialGameState.availableGenres,
               availableGenders: loadedData.availableGenders || initialGameState.availableGenders,
@@ -145,20 +145,20 @@ export function useGameState() {
             description: "Could not load your game progress. Starting fresh or try refreshing.",
             variant: "destructive",
           });
-           // Fallback to a very basic initial state if loading fails catastrophically
-            const initialNpcArtists = NPC_ARTIST_POOL_DATA.map((na, index) => ({ id: `npc-${index}`, ...na }));
-            const initialNpcSongs = generateInitialNPCSongs(initialNpcArtists, 1);
+           // Fallback to a basic initial state on error, ensuring NPCs are still initialized
+            const fallbackNpcArtists = NPC_ARTIST_POOL_DATA.map((na, index) => ({ id: `npc-${index}`, ...na }));
+            const fallbackNpcSongs = generateInitialNPCSongs(fallbackNpcArtists, 1);
             setGameState({
               ...initialGameState,
-              npcArtists: initialNpcArtists,
-              npcSongs: initialNpcSongs,
+              npcArtists: fallbackNpcArtists,
+              npcSongs: fallbackNpcSongs,
             });
         })
         .finally(() => {
           setIsLoaded(true);
         });
     } else {
-      // No user logged in, reset to initial state (which should also init NPCs if not present)
+      // No user logged in, reset to initial state and initialize NPCs
       const initialNpcArtists = gameState.npcArtists.length > 0 ? gameState.npcArtists : NPC_ARTIST_POOL_DATA.map((na, index) => ({ id: `npc-${index}`, ...na }));
       const initialNpcSongs = gameState.npcSongs.length > 0 ? gameState.npcSongs : generateInitialNPCSongs(initialNpcArtists, 1);
       setGameState({
@@ -168,7 +168,9 @@ export function useGameState() {
       });
       setIsLoaded(true);
     }
-  }, [currentUser, authLoading, toast]); // gameState removed from deps to prevent loop on init
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser, authLoading]); // toast was removed to prevent potential loops if toast state changes trigger re-fetch. GameState was also removed to prevent loop on initial set.
+
 
   useEffect(() => {
     if (currentUser && isLoaded && !authLoading && gameState.artist) { // Only save if artist exists
@@ -225,7 +227,7 @@ export function useGameState() {
   const nextTurn = useCallback(() => {
     setGameState(prev => {
       if (!prev.artist) return prev;
-      
+
       let newArtistState = { ...prev.artist };
 
       if (prev.selectedActivityId) {
@@ -261,7 +263,7 @@ export function useGameState() {
           let newScore = s.chartScore || 0;
           newScore *= (0.90 + Math.random() * 0.1); // Decay (90-100% of previous score)
           newScore += (Math.random() * 40 - 20); // Fluctuation (-20 to +20)
-          
+
           let weeks = (s.weeksOnChart || 0) + 1;
           if (weeks > 15 && newScore > 100) newScore *= 0.85; // Faster decay for older hits
           if (weeks > 25 && newScore > 50) newScore *= 0.70;
@@ -273,7 +275,7 @@ export function useGameState() {
       updatedChartSongs.sort((a, b) => (b.chartScore || 0) - (a.chartScore || 0));
 
       const newChart = updatedChartSongs.slice(0, CHART_SIZE);
-      
+
       const updatedPlayerSongs = prev.songs.map(playerSong => {
           if (!playerSong.isReleased) return playerSong;
           const chartEntry = newChart.find(cs => cs.id === playerSong.id && 'lyrics' in cs); // Check it's a player song
@@ -358,7 +360,7 @@ export function useGameState() {
       };
     });
   }, []);
-  
+
   const updateSong = useCallback((updatedSong: Song) => {
     setGameState(prev => ({
       ...prev,
@@ -415,7 +417,7 @@ export function useGameState() {
 
       let baseImpact = 10;
       let skillBonus = prev.artist.skills / 10;
-      
+
       let qualityMultiplier = 1.0;
       if (songToRelease.productionQuality === 'Medium') qualityMultiplier = 1.2;
       if (songToRelease.productionQuality === 'High') qualityMultiplier = 1.5;
@@ -424,11 +426,11 @@ export function useGameState() {
       fanReaction = Math.min(100, Math.max(0, fanReaction));
       let criticScore = Math.floor(Math.random() * 30 + 40 * qualityMultiplier);
       criticScore = Math.min(100, Math.max(0, criticScore));
-      
+
       const newFame = prev.artist.fame + Math.floor((baseImpact + skillBonus + (fanReaction / 20)) * qualityMultiplier);
       const newFanbase = prev.artist.fanbase + Math.floor(((fanReaction / 100) * (prev.artist.skills * 10) + Math.random() * 500) * qualityMultiplier);
       const newMoney = prev.artist.money + Math.floor((Math.random() * 1000 + (criticScore / 100 * 500)) * qualityMultiplier);
-      
+
       const initialSales = Math.floor((Math.random() * 5000 + 1000 + (prev.artist.fanbase / 10)) * qualityMultiplier);
 
       // Calculate initial chart score
@@ -506,7 +508,7 @@ export function useGameState() {
       newArtistState.money = Math.max(0, newArtistState.money);
 
       const resolvedEvent: ActiveEvent = { ...eventToResolve, resolved: true, chosenOption: choiceIndex };
-      
+
       return {
         ...prev,
         artist: newArtistState,
@@ -515,7 +517,7 @@ export function useGameState() {
       };
     });
   }, []);
-  
+
   const updateArtistStats = useCallback((statsDelta: Partial<Artist>) => {
     setGameState(prev => {
       if (!prev.artist) return prev;

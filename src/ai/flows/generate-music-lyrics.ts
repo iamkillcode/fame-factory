@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview An AI agent for generating music lyrics and beat ideas based on a selected style and theme.
+ * @fileOverview An AI agent for generating music lyrics and beat ideas based on a selected genre and theme.
  *
  * - generateMusicLyrics - A function that handles the music lyrics generation process.
  * - GenerateMusicLyricsInput - The input type for the generateMusicLyrics function.
@@ -13,9 +13,9 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateMusicLyricsInputSchema = z.object({
-  style: z
+  genre: z
     .string()
-    .describe('The style of the music, e.g., Love, Party, Struggle.'),
+    .describe('The genre of the music, e.g., Pop, Rock, Hip Hop.'),
   theme: z
     .string()
     .describe('The theme of the song, e.g., Heartbreak, Success, Betrayal.'),
@@ -38,9 +38,9 @@ const prompt = ai.definePrompt({
   name: 'generateMusicLyricsPrompt',
   input: {schema: GenerateMusicLyricsInputSchema},
   output: {schema: GenerateMusicLyricsOutputSchema},
-  prompt: `You are a professional songwriter who is able to generate lyric and beat ideas based on a style and theme.
+  prompt: `You are a professional songwriter who is able to generate lyric and beat ideas based on a genre and theme.
 
-  Style: {{{style}}}
+  Genre: {{{genre}}}
   Theme: {{{theme}}}
 
   Please provide:
@@ -73,10 +73,9 @@ const generateMusicLyricsFlow = ai.defineFlow(
         `[generateMusicLyricsFlow] LLM response did not conform to the expected schema or was empty. Input: ${JSON.stringify(input)}. Full Genkit response object:`, response
       );
       throw new Error(
-        'The AI had trouble generating ideas in the right format. Try a different style or theme, or simplify your theme.'
+        'The AI had trouble generating ideas in the right format. Try a different genre or theme, or simplify your theme.'
       );
     }
     return parsedOutput;
   }
 );
-

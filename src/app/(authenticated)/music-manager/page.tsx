@@ -4,7 +4,7 @@
 import { useGame } from '@/contexts/game-state-context';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Library, PlusCircle, UploadCloud, Loader2, TrendingUp, Star as StarIcon } from 'lucide-react'; // Renamed Star to StarIcon to avoid conflict
+import { Library, PlusCircle, UploadCloud, Loader2, TrendingUp, Star as StarIcon } from 'lucide-react';
 import { SectionCard } from '@/components/section-card';
 import type { Song } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -78,7 +78,7 @@ export default function MusicManagerPage() {
     } else if (qualityLevel === 'High') {
         cost = song.productionQuality === 'Low' ? productionUpgradeCosts.HighFromLow : productionUpgradeCosts.HighFromMedium;
     }
-    
+
     if (artistMoney < cost) {
         toast({ title: "Insufficient Funds", description: `You need $${cost} to upgrade production.`, variant: "destructive"});
         return;
@@ -86,12 +86,12 @@ export default function MusicManagerPage() {
     investInSongProduction(songId, qualityLevel);
     toast({ title: "Production Upgraded!", description: `Invested $${cost} in "${song.title}" for ${qualityLevel} quality.`});
   }, [unreleasedSongs, artistMoney, investInSongProduction, toast]);
-  
+
   const getSongChartPerformance = useCallback((song: Song) => {
     // This function might need to be adapted if chart history is stored differently.
     // For now, it simulates based on current and peak position.
     if (!song.isReleased || !song.weeksOnChart || song.weeksOnChart < 1 || !song.currentChartPosition) return [];
-    
+
     // A more robust history would be stored, here we simulate for display
     const data = [];
     let pos = song.peakChartPosition || song.currentChartPosition;
@@ -130,7 +130,7 @@ export default function MusicManagerPage() {
         icon={Library}
       >
         <Button asChild className="btn-glossy-accent">
-          <Link href="/music-forge"><PlusCircle className="mr-2 h-4 w-4" /> Create New Music</Link>
+          <Link href="/write-songs"><PlusCircle className="mr-2 h-4 w-4" /> Create New Music</Link>
         </Button>
       </PageHeader>
 
@@ -144,7 +144,7 @@ export default function MusicManagerPage() {
           <SectionCard title="Ready for Release?" description="Enhance production quality before releasing your tracks.">
             {unreleasedSongs.length === 0 ? (
               <div className="text-muted-foreground text-center py-8">
-                No unreleased tracks. <Link href="/music-forge" className="text-primary hover:underline">Go create some hits!</Link>
+                No unreleased tracks. <Link href="/write-songs" className="text-primary hover:underline">Go create some hits!</Link>
               </div>
             ) : (
               <ScrollArea className="h-[500px] pr-4">
@@ -154,7 +154,7 @@ export default function MusicManagerPage() {
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                         <div>
                           <h3 className="text-lg font-semibold text-foreground">{song.title}</h3>
-                          <p className="text-sm text-muted-foreground">Style: {song.style} | Theme: {song.theme}</p>
+                          <p className="text-sm text-muted-foreground">Genre: {song.genre} | Theme: {song.theme}</p>
                           <p className="text-xs text-muted-foreground font-code truncate max-w-xs md:max-w-sm" title={song.beat}>Beat: {song.beat}</p>
                           <div className="text-sm text-muted-foreground mt-1">
                             Production Quality: <Badge variant={song.productionQuality === 'High' ? 'default' : song.productionQuality === 'Medium' ? 'secondary' : 'outline'} className={cn(song.productionQuality === 'High' && "bg-green-500 text-white")}>{song.productionQuality}</Badge>
@@ -210,7 +210,7 @@ export default function MusicManagerPage() {
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
                         <div>
                           <h3 className="text-lg font-semibold text-foreground">{song.title}</h3>
-                          <div className="text-sm text-muted-foreground">Released: Week {song.releaseTurn} | Style: {song.style}</div>
+                          <div className="text-sm text-muted-foreground">Released: Week {song.releaseTurn} | Genre: {song.genre}</div>
                           <div className="text-sm text-muted-foreground">Production: <Badge variant={song.productionQuality === 'High' ? 'default' : song.productionQuality === 'Medium' ? 'secondary' : 'outline'} className={cn(song.productionQuality === 'High' && "bg-green-500 text-white")}>{song.productionQuality}</Badge></div>
                         </div>
                         {song.currentChartPosition ? (

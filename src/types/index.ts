@@ -33,7 +33,7 @@ export interface Song {
   id:string;
   title: string;
   theme: string; // e.g., Heartbreak, Success, Social Commentary
-  style: MusicStyle;
+  genre: Genre; // Changed from style: MusicStyle
   lyrics: string; // Finalized lyrics
   beat: string; // Beat description or identifier
   isReleased: boolean;
