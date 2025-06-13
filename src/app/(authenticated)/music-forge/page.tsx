@@ -34,6 +34,12 @@ const forgeSchema = z.object({
 
 type ForgeFormValues = z.infer<typeof forgeSchema>;
 
+interface LyricSection {
+  title: string;
+  content: string;
+  key: keyof Omit<GenerateMusicLyricsOutput, 'beatSuggestion'>;
+}
+
 export default function MusicForgePage() {
   const { gameState, addSong, updateArtistStats } = useGame();
   const [isLoading, setIsLoading] = useState(false);
@@ -44,7 +50,7 @@ export default function MusicForgePage() {
   const form = useForm<ForgeFormValues>({
     resolver: zodResolver(forgeSchema),
     defaultValues: { style: '', theme: '', songTitle: '' },
-    mode: 'onChange', // Enable onChange mode for better UX with trigger
+    mode: 'onChange', 
   });
 
   const handleGenerateIdeas = async () => {
@@ -69,7 +75,7 @@ export default function MusicForgePage() {
       };
       const result = await generateMusicLyrics(input);
 
-      if (result && result.beatSuggestion && result.lyricSuggestions && result.lyricSuggestions.length > 0) {
+      if (result && result.beatSuggestion && result.verseSuggestion && result.chorusSuggestion && result.bridgeSuggestion) {
         setGeneratedContent(result);
       } else {
         console.warn("Generated content was empty or invalid:", result);
@@ -124,6 +130,12 @@ export default function MusicForgePage() {
     setSelectedLyrics([]);
     form.resetField("songTitle"); 
   };
+  
+  const lyricSections: LyricSection[] = generatedContent ? [
+    { title: "Verse Suggestion", content: generatedContent.verseSuggestion, key: "verseSuggestion" },
+    { title: "Chorus Suggestion", content: generatedContent.chorusSuggestion, key: "chorusSuggestion" },
+    { title: "Bridge Suggestion", content: generatedContent.bridgeSuggestion, key: "bridgeSuggestion" },
+  ] : [];
 
   return (
     <Form {...form}>
@@ -173,7 +185,7 @@ export default function MusicForgePage() {
               className="btn-glossy-accent"
             >
               {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Lightbulb className="mr-2 h-4 w-4" />}
-              this button doesnt work
+              Generate Ideas
             </Button>
           </form>
         </SectionCard>
@@ -192,20 +204,18 @@ export default function MusicForgePage() {
                 <h3 className="text-lg font-semibold font-headline mb-2">Beat Suggestion</h3>
                 <p className="text-sm text-muted-foreground p-4 bg-muted/30 rounded-md font-code">{generatedContent.beatSuggestion}</p>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold font-headline mb-2">Lyric Suggestions</h3>
-                <div className="space-y-3">
-                  {generatedContent.lyricSuggestions.map((lyric, index) => (
-                    <div 
-                      key={index} 
-                      onClick={() => handleLyricSelection(lyric)}
-                      className={`p-3 rounded-md border cursor-pointer transition-all ${selectedLyrics.includes(lyric) ? 'bg-primary/20 border-primary ring-2 ring-primary' : 'bg-muted/20 border-border hover:border-primary/50'}`}
-                    >
-                      <p className="font-code text-neon-accent">{lyric}</p>
-                    </div>
-                  ))}
+              
+              {lyricSections.map(section => (
+                <div key={section.key}>
+                  <h3 className="text-lg font-semibold font-headline mb-2">{section.title}</h3>
+                  <div 
+                    onClick={() => handleLyricSelection(section.content)}
+                    className={`p-3 rounded-md border cursor-pointer transition-all ${selectedLyrics.includes(section.content) ? 'bg-primary/20 border-primary ring-2 ring-primary' : 'bg-muted/20 border-border hover:border-primary/50'}`}
+                  >
+                    <p className="font-code text-neon-accent whitespace-pre-line">{section.content}</p>
+                  </div>
                 </div>
-              </div>
+              ))}
               
               <div className="pt-4 border-t border-border/50 space-y-4">
                  <FormField
@@ -235,3 +245,4 @@ export default function MusicForgePage() {
     </Form>
   );
 }
+

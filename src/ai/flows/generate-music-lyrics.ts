@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview An AI agent for generating music lyrics based on a selected style and theme.
+ * @fileOverview An AI agent for generating music lyrics and beat ideas based on a selected style and theme.
  *
  * - generateMusicLyrics - A function that handles the music lyrics generation process.
  * - GenerateMusicLyricsInput - The input type for the generateMusicLyrics function.
@@ -24,7 +24,9 @@ export type GenerateMusicLyricsInput = z.infer<typeof GenerateMusicLyricsInputSc
 
 const GenerateMusicLyricsOutputSchema = z.object({
   beatSuggestion: z.string().describe('A suggestion for the beat of the song.'),
-  lyricSuggestions: z.array(z.string()).describe('Suggestions for the lyrics of the song.'),
+  verseSuggestion: z.string().describe('A suggestion for a verse of the song.'),
+  chorusSuggestion: z.string().describe('A suggestion for a chorus of the song.'),
+  bridgeSuggestion: z.string().describe('A suggestion for a bridge or an alternative lyrical idea for the song.'),
 });
 export type GenerateMusicLyricsOutput = z.infer<typeof GenerateMusicLyricsOutputSchema>;
 
@@ -41,11 +43,18 @@ const prompt = ai.definePrompt({
   Style: {{{style}}}
   Theme: {{{theme}}}
 
-  Please provide a beat suggestion and three lyric suggestions for a song with the given style and theme.
+  Please provide:
+  1. A beat suggestion.
+  2. A suggestion for a verse.
+  3. A suggestion for a chorus.
+  4. A suggestion for a bridge or an alternative lyrical idea.
+
   Format your response as a JSON object:
   {
     "beatSuggestion": "[beat suggestion here]",
-    "lyricSuggestions": ["[lyric suggestion 1]", "[lyric suggestion 2]", "[lyric suggestion 3]"]
+    "verseSuggestion": "[verse suggestion here]",
+    "chorusSuggestion": "[chorus suggestion here]",
+    "bridgeSuggestion": "[bridge/alternative idea here]"
   }`,
 });
 
@@ -70,3 +79,4 @@ const generateMusicLyricsFlow = ai.defineFlow(
     return parsedOutput;
   }
 );
+
