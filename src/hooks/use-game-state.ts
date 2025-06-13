@@ -7,6 +7,7 @@ import { ALL_GENDERS, ALL_GENRES, ALL_MUSIC_STYLES } from '@/types';
 import { useAuth } from '@/contexts/auth-context';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast'; // Added import
 
 const initialArtistSkills = 5;
 const initialArtistMoney = 1000;
@@ -39,6 +40,7 @@ export function useGameState() {
   const [gameState, setGameState] = useState<GameState>(initialGameState);
   const [isLoaded, setIsLoaded] = useState(false);
   const { currentUser, loading: authLoading } = useAuth();
+  const { toast } = useToast(); // Initialize useToast
 
   useEffect(() => {
     if (authLoading) {
@@ -47,28 +49,26 @@ export function useGameState() {
     }
 
     if (currentUser) {
-      setIsLoaded(false); // Indicate loading is starting or re-starting
+      setIsLoaded(false); 
       const userGameStateRef = doc(db, 'users', currentUser.uid);
       getDoc(userGameStateRef)
         .then((docSnap) => {
           if (docSnap.exists()) {
             const loadedData = docSnap.data() as GameState;
-            // Merge loaded data with initialGameState to ensure all fields are present
             const mergedState: GameState = {
-              ...initialGameState, // Start with all defaults from initialGameState
-              ...loadedData,       // Overlay with whatever was loaded
-              artist: loadedData.artist || null, // Explicitly take loaded artist or null
+              ...initialGameState, 
+              ...loadedData,       
+              artist: loadedData.artist || null, 
               songs: loadedData.songs ? loadedData.songs.map(s => ({
                 ...s,
                 productionQuality: s.productionQuality || 'Low',
                 productionInvestment: s.productionInvestment || 0,
-              })) : [], // Ensure songs array and defaults
+              })) : [], 
               albums: loadedData.albums || [],
               activeEvents: loadedData.activeEvents || [],
               eventHistory: loadedData.eventHistory || [],
               currentTurn: loadedData.currentTurn || 1,
               selectedActivityId: loadedData.selectedActivityId || null,
-              // Ensure new enum arrays are present if they were added after initial save
               availableMusicStyles: loadedData.availableMusicStyles || initialGameState.availableMusicStyles,
               availableGenres: loadedData.availableGenres || initialGameState.availableGenres,
               availableGenders: loadedData.availableGenders || initialGameState.availableGenders,
@@ -76,11 +76,9 @@ export function useGameState() {
             };
             setGameState(mergedState);
           } else {
-            // Document doesn't exist. This means it's a new user or data was wiped from server.
-            // Set to a clean initial state for a new user, directing to artist-genesis.
             setGameState({
               ...initialGameState,
-              artist: null, // Critical for new user flow
+              artist: null, 
               songs: [],
               albums: [],
               currentTurn: 1,
@@ -92,40 +90,38 @@ export function useGameState() {
         })
         .catch((error) => {
           console.error("Error fetching game state from Firestore:", error);
-          // On error, gameState will retain its current value.
-          // If this is an initial load (gameState is initialGameState), artist will be null,
-          // leading to artist-genesis page, which is acceptable.
-          // If data was previously loaded, it avoids nullifying artist due to a transient read error.
         })
         .finally(() => {
-          setIsLoaded(true); // Mark as loaded AFTER fetch attempt is complete
+          setIsLoaded(true); 
         });
     } else {
-      // No current user, reset to complete initial state.
       setGameState(initialGameState);
-      setIsLoaded(true); // No data to load, so it's "loaded"
+      setIsLoaded(true); 
     }
   }, [currentUser, authLoading]);
 
   useEffect(() => {
     if (currentUser && isLoaded && !authLoading && gameState.artist) {
-      // Only save if an artist object exists in the game state.
-      // This prevents saving an empty/reset state over existing data if loading failed or user is new.
       const userGameStateRef = doc(db, 'users', currentUser.uid);
       setDoc(userGameStateRef, gameState, { merge: true })
         .catch((error) => {
           console.error("Error saving game state to Firestore:", error);
+          toast({
+            title: "Save Error",
+            description: "There was a problem saving your game progress. Please check your connection and try again.",
+            variant: "destructive",
+          });
         });
     }
-  }, [gameState, currentUser, isLoaded, authLoading]);
+  }, [gameState, currentUser, isLoaded, authLoading, toast]);
 
   const createArtist = useCallback((artistDetails: Omit<Artist, 'fame' | 'skills' | 'fanbase' | 'money' | 'reputation' | 'uid'>) => {
     if (!currentUser) {
       console.error("Cannot create artist: no user logged in.");
       return;
     }
-    setGameState(prev => ({ // Use prev to ensure we base on the most current non-artist state
-      ...initialGameState, // Reset to initial defaults for a new career
+    setGameState(prev => ({ 
+      ...initialGameState, 
       currentTurn: 1,
       artist: {
         ...artistDetails,
@@ -136,7 +132,7 @@ export function useGameState() {
         money: initialArtistMoney,
         reputation: initialArtistReputation,
       },
-      songs: [], // Ensure these are reset for a new artist
+      songs: [], 
       albums: [],
       activeEvents: [],
       eventHistory: [],
@@ -156,22 +152,20 @@ export function useGameState() {
       if (!prev.artist) return prev;
       
       let newArtistState = { ...prev.artist };
-      // let activityCost = 0; // activityCost is implicitly handled by direct deduction
 
       if (prev.selectedActivityId) {
         const activity = AVAILABLE_TRAINING_ACTIVITIES.find(act => act.id === prev.selectedActivityId);
         if (activity && newArtistState.money >= activity.cost) {
-          // activityCost = activity.cost; // Not needed here
           newArtistState.money -= activity.cost;
           if (activity.effects.skills) newArtistState.skills = Math.min(100, Math.max(0, newArtistState.skills + activity.effects.skills));
           if (activity.effects.reputation) newArtistState.reputation = Math.min(100, Math.max(0, newArtistState.reputation + activity.effects.reputation));
           if (activity.effects.fame) newArtistState.fame = Math.max(0, newArtistState.fame + activity.effects.fame);
-          if (activity.effects.money) newArtistState.money += activity.effects.money; // Can be a gain
+          if (activity.effects.money) newArtistState.money += activity.effects.money; 
           if (activity.effects.fanbase) newArtistState.fanbase = Math.max(0, newArtistState.fanbase + activity.effects.fanbase);
         }
       }
 
-      newArtistState.money -= 50; // Basic weekly expenses
+      newArtistState.money -= 50; 
       if (newArtistState.money < 0) newArtistState.money = 0; 
 
       if (prev.artist.fanbase > 1000 && prev.artist.fame > 10) {
@@ -197,7 +191,7 @@ export function useGameState() {
         currentTurn: prev.currentTurn + 1,
         artist: newArtistState,
         songs: updatedSongs,
-        selectedActivityId: null, // Reset selected activity for next turn
+        selectedActivityId: null, 
       };
     });
   }, []);
@@ -237,21 +231,21 @@ export function useGameState() {
       let targetQuality: ProductionQuality = 'Low';
 
       if (qualityLevel === 'Medium' && song.productionQuality === 'Low') {
-        cost = 500; // Cost to upgrade to Medium
+        cost = 500; 
         targetQuality = 'Medium';
       } else if (qualityLevel === 'High' && (song.productionQuality === 'Low' || song.productionQuality === 'Medium')) {
-        cost = song.productionQuality === 'Low' ? 2000 : 1500; // Cost to upgrade to High (from Low or Medium)
+        cost = song.productionQuality === 'Low' ? 2000 : 1500; 
         targetQuality = 'High';
       } else {
-        return prev; // Already at or above this quality, or invalid request
+        return prev; 
       }
 
-      if (prev.artist.money < cost) return prev; // Cannot afford
+      if (prev.artist.money < cost) return prev; 
 
       const updatedSong = {
         ...song,
         productionQuality: targetQuality,
-        productionInvestment: (song.productionInvestment || 0) + cost, // Ensure productionInvestment is a number
+        productionInvestment: (song.productionInvestment || 0) + cost, 
       };
       const updatedSongs = [...prev.songs];
       updatedSongs[songIndex] = updatedSong;
@@ -281,17 +275,16 @@ export function useGameState() {
       if (songToRelease.productionQuality === 'High') qualityMultiplier = 1.5;
 
       let fanReaction = Math.floor(Math.random() * 30 + 50 * qualityMultiplier); 
-      fanReaction = Math.min(100, Math.max(0, fanReaction)); // Ensure 0-100
+      fanReaction = Math.min(100, Math.max(0, fanReaction)); 
       let criticScore = Math.floor(Math.random() * 30 + 40 * qualityMultiplier); 
-      criticScore = Math.min(100, Math.max(0, criticScore)); // Ensure 0-100
+      criticScore = Math.min(100, Math.max(0, criticScore)); 
       
       const newFame = prev.artist.fame + Math.floor((baseImpact + skillBonus + (fanReaction / 20)) * qualityMultiplier);
       const newFanbase = prev.artist.fanbase + Math.floor(((fanReaction / 100) * (prev.artist.skills * 10) + Math.random() * 500) * qualityMultiplier);
       const newMoney = prev.artist.money + Math.floor((Math.random() * 1000 + (criticScore / 100 * 500)) * qualityMultiplier);
       
-      const initialSales = Math.floor((Math.random() * 5000 + 1000 + (prev.artist.fanbase / 10)) * qualityMultiplier); // Add fanbase influence
+      const initialSales = Math.floor((Math.random() * 5000 + 1000 + (prev.artist.fanbase / 10)) * qualityMultiplier); 
 
-      // Better scores & quality = better initial chart position (lower number is better)
       let initialChartPosition = Math.floor(80 - (criticScore / 2) - (fanReaction / 5) + (Math.random() * 20));
       if (songToRelease.productionQuality === 'High') initialChartPosition -= 10;
       if (songToRelease.productionQuality === 'Medium') initialChartPosition -= 5;
@@ -342,7 +335,6 @@ export function useGameState() {
       if (!eventToResolve || !prev.artist) return prev;
 
       let newArtistState = { ...prev.artist };
-      // Example effects - these should be more varied and balanced
       switch (choiceIndex) {
         case 0: 
           newArtistState.fame += Math.floor(Math.random() * 10 + 5);
@@ -351,7 +343,7 @@ export function useGameState() {
           break;
         case 1: 
           newArtistState.fame += Math.floor(Math.random() * 5);
-          newArtistState.reputation += Math.floor(Math.random() * 6 - 3); // Can be positive or negative
+          newArtistState.reputation += Math.floor(Math.random() * 6 - 3); 
           break;
         case 2: 
           newArtistState.fame -= Math.floor(Math.random() * 5);
@@ -361,7 +353,6 @@ export function useGameState() {
           if (newArtistState.money < 0) newArtistState.money = 0;
           break;
       }
-      // Ensure stats stay within bounds
       newArtistState.fame = Math.max(0, newArtistState.fame);
       newArtistState.reputation = Math.max(0, Math.min(100, newArtistState.reputation));
       newArtistState.money = Math.max(0, newArtistState.money);
