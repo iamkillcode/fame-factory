@@ -11,7 +11,7 @@ export interface Artist {
   name: string;
   gender: Gender;
   genre: Genre;
-  backstory?: string; // Made optional
+  backstory?: string;
   fame: number; // 0-1000
   skills: number; // 0-100 (Overall skill level: vocals, songwriting, stage presence)
   fanbase: number; // Number of fans
@@ -30,7 +30,7 @@ export interface GeneratedLyrics {
 }
 
 export interface Song {
-  id: string;
+  id:string;
   title: string;
   theme: string; // e.g., Heartbreak, Success, Social Commentary
   style: MusicStyle;
@@ -46,6 +46,7 @@ export interface Song {
   criticScore?: number; // 0-100, reviews
   productionQuality: ProductionQuality;
   productionInvestment: number; // Amount spent on production
+  chartScore?: number; // Internal score for chart ranking
 }
 
 export interface Album {
@@ -89,8 +90,27 @@ export interface TrainingActivity {
     reputation?: number;
     money?: number; // Could also be a gain for some activities
     fame?: number;
-    // Can add more specific effects later, e.g., vocalSkill, songwritingSkill
+    fanbase?: number;
   };
+}
+
+export interface NPCArtist {
+  id: string;
+  name: string;
+  genre: Genre;
+}
+
+export interface NPCSong {
+  id: string;
+  title: string;
+  artistId: string; // Corresponds to NPCArtist id
+  artistName: string;
+  genre: Genre;
+  chartScore: number;
+  currentChartPosition?: number | null;
+  peakChartPosition?: number;
+  weeksOnChart?: number;
+  releaseTurn: number; // Turn it "appeared"
 }
 
 
@@ -106,6 +126,8 @@ export interface GameState {
   availableGenres: Genre[];
   availableGenders: Gender[];
   selectedActivityId: string | null; // ID of the training activity chosen for the week
+  npcArtists: NPCArtist[];
+  npcSongs: NPCSong[];
 }
 
 export const ALL_GENRES: Genre[] = ['Pop', 'Rock', 'Hip Hop', 'R&B', 'Electronic', 'Country', 'Jazz', 'Blues', 'K-Pop', 'Indie', 'Folk', 'Metal', 'Rap'];
@@ -140,4 +162,3 @@ export interface AuthContextType {
   signIn: (credentials: SignInCredentials) => Promise<void>;
   signOut: () => Promise<void>;
 }
-

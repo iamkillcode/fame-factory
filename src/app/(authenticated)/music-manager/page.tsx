@@ -4,9 +4,9 @@
 import { useGame } from '@/contexts/game-state-context';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Library, Disc3, PlusCircle, UploadCloud, BarChart2, ListMusic, Loader2, DollarSign, TrendingUp, Star } from 'lucide-react';
+import { Library, PlusCircle, UploadCloud, Loader2, TrendingUp, Star as StarIcon } from 'lucide-react'; // Renamed Star to StarIcon to avoid conflict
 import { SectionCard } from '@/components/section-card';
-import type { Song, ProductionQuality } from '@/types';
+import type { Song } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -16,13 +16,11 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
-} from "@/components/ui/chart"
-import { Line, LineChart as RechartsLineChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, TooltipProps } from "recharts"
+} from "@/components/ui/chart";
+import { Line, LineChart as RechartsLineChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, TooltipProps } from "recharts";
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import { cn } from '@/lib/utils';
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 const CustomTooltipComponent = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
   if (active && payload && payload.length) {
@@ -58,15 +56,15 @@ export default function MusicManagerPage() {
   }
 
   const unreleasedSongs = gameState.songs.filter(s => !s.isReleased);
-  const releasedSongs = gameState.songs.filter(s => s.isReleased).sort((a,b) => b.releaseTurn - a.releaseTurn);
+  const releasedSongs = gameState.songs.filter(s => s.isReleased).sort((a,b) => (b.releaseTurn || 0) - (a.releaseTurn || 0));
   const artistMoney = gameState.artist.money;
 
   const handleReleaseSong = useCallback((songId: string) => {
     releaseSong(songId);
-    const releasedSongDetails = gameState.songs.find(s => s.id === songId); 
+    const releasedSongDetails = gameState.songs.find(s => s.id === songId);
     toast({
       title: "Song Released!",
-      description: `${releasedSongDetails?.title || 'Your song'} is now out for the world to hear! (Quality: ${releasedSongDetails?.productionQuality})`,
+      description: `${releasedSongDetails?.title || 'Your song'} is now out! (Quality: ${releasedSongDetails?.productionQuality}) Its initial chart score is ${releasedSongDetails?.chartScore || 'N/A'}.`,
     });
   }, [releaseSong, gameState.songs, toast]);
 
@@ -90,25 +88,38 @@ export default function MusicManagerPage() {
   }, [unreleasedSongs, artistMoney, investInSongProduction, toast]);
   
   const getSongChartPerformance = useCallback((song: Song) => {
-    if (!song.isReleased || !song.weeksOnChart || song.weeksOnChart < 1) return [];
-    let data = [];
-    let currentPos = song.peakChartPosition || song.currentChartPosition || Math.floor(Math.random() * 50 + 50); 
-    for (let i = 0; i <= song.weeksOnChart; i++) {
-        data.push({ week: song.releaseTurn + i, position: currentPos });
-        // Simulate chart movement - this could be more sophisticated
-        currentPos += Math.floor(Math.random() * 10 - 5 + (song.productionQuality === 'High' ? -1 : song.productionQuality === 'Medium' ? 0 : 1) ); // Quality influence
-        if (currentPos < 1) currentPos = 1;
-        if (currentPos > 100) currentPos = 100; 
-    }
-    return data;
-  }, []); // Empty dependency array, assuming song properties used inside are stable per song object
+    // This function might need to be adapted if chart history is stored differently.
+    // For now, it simulates based on current and peak position.
+    if (!song.isReleased || !song.weeksOnChart || song.weeksOnChart < 1 || !song.currentChartPosition) return [];
+    
+    // A more robust history would be stored, here we simulate for display
+    const data = [];
+    let pos = song.peakChartPosition || song.currentChartPosition;
+    const peakWeek = Math.max(1, Math.floor((song.weeksOnChart || 1) / 2)); // Assume peak around mid-chart life
 
-  const chartConfig = {
+    for (let i = 0; i <= (song.weeksOnChart || 0) ; i++) {
+        let simulatedPos;
+        if (i < peakWeek) { // Rising phase
+            simulatedPos = (song.peakChartPosition || 100) + Math.floor(((100 - (song.peakChartPosition || 100)) / peakWeek) * (peakWeek - i) * (Math.random() * 0.2 + 0.9));
+        } else { // Falling phase or stable
+             simulatedPos = (song.peakChartPosition || 1) + Math.floor((( (song.currentChartPosition || 100) - (song.peakChartPosition || 1)) / Math.max(1, (song.weeksOnChart || 1) - peakWeek)) * (i - peakWeek) * (Math.random() * 0.2 + 0.9));
+        }
+        simulatedPos = Math.max(1, Math.min(100, Math.round(simulatedPos)));
+        data.push({ week: (song.releaseTurn || 0) + i, position: simulatedPos });
+    }
+    if (data.length > 0 && song.currentChartPosition) { // Ensure current position is accurate
+        data[data.length-1].position = song.currentChartPosition;
+    }
+
+    return data;
+  }, []);
+
+  const chartConfig = useMemo(() => ({
     position: {
       label: "Chart Position",
       color: "hsl(var(--chart-1))",
     },
-  } satisfies import('@/components/ui/chart').ChartConfig;
+  }), []) satisfies import('@/components/ui/chart').ChartConfig;
 
 
   return (
@@ -157,8 +168,8 @@ export default function MusicManagerPage() {
                       <div className="flex flex-col sm:flex-row gap-2 items-center border-t border-border/30 pt-3">
                         <p className="text-sm font-medium text-muted-foreground shrink-0">Improve Production:</p>
                         <div className="flex gap-2 flex-wrap">
-                           <Button 
-                            size="xs" 
+                           <Button
+                            size="xs"
                             variant="outline"
                             onClick={() => handleInvestInProduction(song.id, 'Medium')}
                             disabled={song.productionQuality !== 'Low' || artistMoney < productionUpgradeCosts.Medium}
@@ -166,14 +177,14 @@ export default function MusicManagerPage() {
                             >
                             <TrendingUp className="mr-1.5 h-3 w-3"/> Medium Quality (${productionUpgradeCosts.Medium})
                            </Button>
-                           <Button 
-                            size="xs" 
+                           <Button
+                            size="xs"
                             variant="outline"
                             onClick={() => handleInvestInProduction(song.id, 'High')}
                             disabled={song.productionQuality === 'High' || artistMoney < (song.productionQuality === 'Low' ? productionUpgradeCosts.HighFromLow : productionUpgradeCosts.HighFromMedium)}
                             className="text-xs"
                             >
-                             <Star className="mr-1.5 h-3 w-3"/> High Quality (${song.productionQuality === 'Low' ? productionUpgradeCosts.HighFromLow : productionUpgradeCosts.HighFromMedium})
+                             <StarIcon className="mr-1.5 h-3 w-3"/> High Quality (${song.productionQuality === 'Low' ? productionUpgradeCosts.HighFromLow : productionUpgradeCosts.HighFromMedium})
                            </Button>
                         </div>
                       </div>
@@ -202,10 +213,12 @@ export default function MusicManagerPage() {
                           <div className="text-sm text-muted-foreground">Released: Week {song.releaseTurn} | Style: {song.style}</div>
                           <div className="text-sm text-muted-foreground">Production: <Badge variant={song.productionQuality === 'High' ? 'default' : song.productionQuality === 'Medium' ? 'secondary' : 'outline'} className={cn(song.productionQuality === 'High' && "bg-green-500 text-white")}>{song.productionQuality}</Badge></div>
                         </div>
-                        {song.currentChartPosition && (
+                        {song.currentChartPosition ? (
                           <Badge variant="default" className="bg-primary/80 text-primary-foreground">
-                            Currently #{song.currentChartPosition}
+                            Chart: #{song.currentChartPosition} (Peak: #{song.peakChartPosition || song.currentChartPosition})
                           </Badge>
+                        ) : (
+                          <Badge variant="outline">Not Charting</Badge>
                         )}
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm mb-3">
@@ -213,14 +226,15 @@ export default function MusicManagerPage() {
                         <div>Critic Score: <span className="font-semibold text-primary">{song.criticScore || 'N/A'}%</span></div>
                         <div>Sales/Streams: <span className="font-semibold text-primary">{song.sales?.toLocaleString() || 'N/A'}</span></div>
                       </div>
-                      {performanceData.length > 0 && (
+                       <div>Internal Chart Score: <span className="text-xs text-muted-foreground">{song.chartScore?.toFixed(0) || 'N/A'}</span></div>
+                      {performanceData.length > 0 && song.currentChartPosition && (
                         <div>
                           <h4 className="text-xs uppercase text-muted-foreground mb-1">Chart Performance (Position vs Week)</h4>
                           <ChartContainer config={chartConfig} className="h-[150px] w-full">
                             <RechartsLineChart data={performanceData} margin={{ top: 5, right: 20, left: -20, bottom: 0 }}>
                               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border)/0.3)" />
                               <XAxis dataKey="week" stroke="hsl(var(--muted-foreground))" fontSize={10} />
-                              <YAxis reversed domain={[1, 100]} stroke="hsl(var(--muted-foreground))" fontSize={10} allowDataOverflow={true} />
+                              <YAxis reversed domain={[1, 100]} stroke="hsl(var(--muted-foreground))" fontSize={10} allowDataOverflow={true} ticks={[1, 10, 25, 50, 75, 100]} />
                               <ChartTooltip content={<CustomTooltip />} cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '3 3' }} />
                               <Line type="monotone" dataKey="position" stroke="hsl(var(--primary))" strokeWidth={2} dot={{r: 2, fill: 'hsl(var(--primary))'}} activeDot={{r:4}} />
                             </RechartsLineChart>
