@@ -33,7 +33,7 @@ export interface Song {
   id:string;
   title: string;
   theme: string; // e.g., Heartbreak, Success, Social Commentary
-  genre: Genre; // Changed from style: MusicStyle
+  genre: Genre;
   lyrics: string; // Finalized lyrics
   beat: string; // Beat description or identifier
   isReleased: boolean;
@@ -47,6 +47,8 @@ export interface Song {
   productionQuality: ProductionQuality;
   productionInvestment: number; // Amount spent on production
   chartScore?: number; // Internal score for chart ranking
+  weeklyStreams?: number;
+  totalEarnings?: number;
 }
 
 export interface Album {
@@ -98,6 +100,7 @@ export interface NPCArtist {
   id: string;
   name: string;
   genre: Genre;
+  popularity: number; // e.g., 1-10 scale, influencing new song strength
 }
 
 export interface NPCSong {
