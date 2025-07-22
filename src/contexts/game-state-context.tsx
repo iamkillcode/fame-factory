@@ -1,6 +1,7 @@
+
 'use client';
 
-import type { GameState, Artist, Song, Album, ActiveEvent } from '@/types';
+import type { GameState, Artist, Song, Album, ActiveEvent, TrainingActivity } from '@/types';
 import { useGameState, initialGameState } from '@/hooks/use-game-state';
 import type { ReactNode } from 'react';
 import { createContext, useContext } from 'react';
@@ -8,7 +9,6 @@ import { createContext, useContext } from 'react';
 interface GameStateContextType {
   gameState: GameState;
   createArtist: (artistDetails: Omit<Artist, 'fame' | 'skills' | 'fanbase' | 'money' | 'reputation'>) => void;
-  nextTurn: () => void;
   addSong: (song: Omit<Song, 'id' | 'isReleased' | 'releaseTurn'>) => void;
   updateSong: (updatedSong: Song) => void;
   releaseSong: (songId: string) => void;
@@ -16,13 +16,14 @@ interface GameStateContextType {
   addActiveEvent: (event: ActiveEvent) => void;
   resolveActiveEvent: (eventId: string, choiceIndex: number) => void;
   updateArtistStats: (statsDelta: Partial<Artist>) => void;
+  performActivity: (activity: TrainingActivity) => void;
+  investInSongProduction: (songId: string, qualityLevel: 'Medium' | 'High') => void;
   isLoaded: boolean;
 }
 
 const GameStateContext = createContext<GameStateContextType>({
   gameState: initialGameState,
   createArtist: () => { throw new Error('GameStateProvider not found') },
-  nextTurn: () => { throw new Error('GameStateProvider not found') },
   addSong: () => { throw new Error('GameStateProvider not found') },
   updateSong: () => { throw new Error('GameStateProvider not found') },
   releaseSong: () => { throw new Error('GameStateProvider not found') },
@@ -30,6 +31,8 @@ const GameStateContext = createContext<GameStateContextType>({
   addActiveEvent: () => { throw new Error('GameStateProvider not found') },
   resolveActiveEvent: () => { throw new Error('GameStateProvider not found') },
   updateArtistStats: () => { throw new Error('GameStateProvider not found') },
+  performActivity: () => { throw new Error('GameStateProvider not found')},
+  investInSongProduction: () => { throw new Error('GameStateProvider not found')},
   isLoaded: false,
 });
 

@@ -52,16 +52,16 @@ const activityIcons: Record<string, React.ElementType> = {
 
 
 export default function DashboardPage() {
-  const { gameState, nextTurn, isLoaded, selectWeeklyActivity, updateArtistStats } = useGame();
+  const { gameState, isLoaded, performActivity } = useGame();
   const { toast } = useToast();
 
   if (!isLoaded || !gameState.artist) {
     return <div className="flex h-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /> Loading Dashboard...</div>;
   }
 
-  const { artist, currentTurn, songs, selectedActivityId } = gameState;
+  const { artist, currentTurn, songs } = gameState;
 
-  const handleSelectActivity = useCallback((activity: TrainingActivity) => {
+  const handlePerformActivity = useCallback((activity: TrainingActivity) => {
     if (artist.money < activity.cost) {
       toast({
         title: "Not enough funds",
@@ -70,12 +70,8 @@ export default function DashboardPage() {
       });
       return;
     }
-    selectWeeklyActivity(activity.id);
-    toast({
-        title: "Activity Selected",
-        description: `${activity.name} is planned for this week.`,
-    })
-  }, [artist.money, selectWeeklyActivity, toast]);
+    performActivity(activity);
+  }, [artist.money, performActivity, toast]);
 
   const chartData = [
     { name: 'Fame', value: artist.fame, fill: "hsl(var(--chart-1))" },
@@ -108,14 +104,9 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <PageHeader
         title={`Welcome, ${artist.name}!`}
-        description={`Currently Week ${currentTurn} of your career. Make it count!`}
+        description={`It's currently Week ${currentTurn} in the Fame Factory universe.`}
         icon={Star}
-      >
-        <Button onClick={nextTurn} className="btn-glossy-accent" size="lg" disabled={!selectedActivityId}>
-          <CalendarDays className="mr-2 h-5 w-5" />
-          {!selectedActivityId ? "Select Activity First" : "Advance to Next Week"}
-        </Button>
-      </PageHeader>
+      />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatCard title="Fame Level" value={artist.fame.toLocaleString()} icon={TrendingUp} description="How well-known you are." iconClassName="text-yellow-400" />
@@ -170,11 +161,10 @@ export default function DashboardPage() {
         </SectionCard>
       </div>
 
-      <SectionCard title="Weekly Focus" description="Choose an activity to focus on this week. This will be processed when you advance to the next week.">
+      <SectionCard title="Activities & Training" description="Spend money to improve your artist's stats. Effects are applied immediately.">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {AVAILABLE_TRAINING_ACTIVITIES.map(activity => {
             const Icon = activityIcons[activity.id] || Award; // Default icon
-            const isSelected = selectedActivityId === activity.id;
             const canAfford = artist.money >= activity.cost;
             return (
               <Button
@@ -182,14 +172,13 @@ export default function DashboardPage() {
                 variant="outline"
                 className={cn(
                   "h-auto p-4 flex flex-col items-start text-left glassy-card hover:border-primary/80",
-                  isSelected && "border-primary ring-2 ring-primary bg-primary/10",
                   !canAfford && "opacity-50 cursor-not-allowed"
                 )}
-                onClick={() => canAfford ? handleSelectActivity(activity) : toast({title: "Not enough funds", description: `You need $${activity.cost}.`, variant: "destructive"})}
-                disabled={!canAfford && !isSelected}
+                onClick={() => handlePerformActivity(activity)}
+                disabled={!canAfford}
               >
                 <div className="flex items-center mb-2">
-                  <Icon className={cn("h-6 w-6 mr-3", isSelected ? "text-primary" : "text-muted-foreground")} />
+                  <Icon className={cn("h-6 w-6 mr-3 text-muted-foreground")} />
                   <h3 className="text-lg font-semibold text-foreground">{activity.name}</h3>
                 </div>
                 <p className="text-sm text-muted-foreground mb-1">{activity.description}</p>

@@ -128,7 +128,6 @@ export interface GameState {
   availableMusicStyles: MusicStyle[]; // Styles for Music Forge
   availableGenres: Genre[];
   availableGenders: Gender[];
-  selectedActivityId: string | null; // ID of the training activity chosen for the week
   npcArtists: NPCArtist[];
   npcSongs: NPCSong[];
 }

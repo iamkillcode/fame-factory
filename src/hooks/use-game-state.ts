@@ -49,7 +49,6 @@ export const initialGameState: GameState = {
   availableMusicStyles: ALL_MUSIC_STYLES,
   availableGenres: ALL_GENRES,
   availableGenders: ALL_GENDERS,
-  selectedActivityId: null,
   npcArtists: [],
   npcSongs: [],
 };
@@ -125,7 +124,6 @@ export function useGameState() {
               activeEvents: loadedData.activeEvents || [],
               eventHistory: loadedData.eventHistory || [],
               currentTurn: loadedData.currentTurn || 1,
-              selectedActivityId: loadedData.selectedActivityId || null,
               npcArtists: npcArtists,
               npcSongs: npcSongs,
               availableMusicStyles: loadedData.availableMusicStyles || initialGameState.availableMusicStyles,
@@ -134,11 +132,12 @@ export function useGameState() {
               lyricThemes: loadedData.lyricThemes || initialGameState.lyricThemes,
             };
           } else {
+            // New user, set up a fresh state with NPCs
             const initialNpcArtists = NPC_ARTIST_POOL_DATA.map((na, index) => ({ id: `npc-${index}`, ...na }));
             const initialNpcSongs = generateInitialNPCSongs(initialNpcArtists, 1);
             finalState = {
               ...initialGameState,
-              artist: null,
+              artist: null, // No artist yet
               currentTurn: 1,
               npcArtists: initialNpcArtists,
               npcSongs: initialNpcSongs,
@@ -153,18 +152,21 @@ export function useGameState() {
             description: "Could not load your game progress. Starting fresh or try refreshing.",
             variant: "destructive",
           });
-            const fallbackNpcArtists = NPC_ARTIST_POOL_DATA.map((na, index) => ({ id: `npc-${index}`, ...na }));
-            const fallbackNpcSongs = generateInitialNPCSongs(fallbackNpcArtists, 1);
-            setGameState({
+          // Fallback to a clean initial state, even on error
+          const fallbackNpcArtists = NPC_ARTIST_POOL_DATA.map((na, index) => ({ id: `npc-${index}`, ...na }));
+          const fallbackNpcSongs = generateInitialNPCSongs(fallbackNpcArtists, 1);
+          setGameState({
               ...initialGameState,
+              artist: null,
               npcArtists: fallbackNpcArtists,
               npcSongs: fallbackNpcSongs,
-            });
+          });
         })
         .finally(() => {
           setIsLoaded(true);
         });
     } else {
+      // Not logged in, use a clean initial state
       const initialNpcArtists = gameState.npcArtists.length > 0 ? gameState.npcArtists : NPC_ARTIST_POOL_DATA.map((na, index) => ({ id: `npc-${index}`, ...na }));
       const initialNpcSongs = gameState.npcSongs.length > 0 ? gameState.npcSongs : generateInitialNPCSongs(initialNpcArtists, 1);
       setGameState({
@@ -174,7 +176,7 @@ export function useGameState() {
       });
       setIsLoaded(true);
     }
-  }, [currentUser, authLoading, toast]); // GameState was removed to prevent loop on initial set.
+  }, [currentUser, authLoading]); // Dependency array is crucial here to prevent loops
 
 
   useEffect(() => {
@@ -195,6 +197,7 @@ export function useGameState() {
   const createArtist = useCallback((artistDetails: Omit<Artist, 'fame' | 'skills' | 'fanbase' | 'money' | 'reputation' | 'uid'>) => {
     if (!currentUser) {
       console.error("Cannot create artist: no user logged in.");
+      toast({ title: "Not Logged In", description: "You must be logged in to create an artist.", variant: "destructive" });
       return;
     }
     const initialNpcArtists = NPC_ARTIST_POOL_DATA.map((na, index) => ({ id: `npc-${index}`, ...na }));
@@ -216,167 +219,41 @@ export function useGameState() {
       albums: [],
       activeEvents: [],
       eventHistory: [],
-      selectedActivityId: null,
       npcArtists: initialNpcArtists,
       npcSongs: initialNpcSongs,
     }));
-  }, [currentUser]);
-
-  const selectWeeklyActivity = useCallback((activityId: string | null) => {
-    setGameState(prev => ({
-      ...prev,
-      selectedActivityId: activityId,
-    }));
-  }, []);
-
-  const nextTurn = useCallback(() => {
+  }, [currentUser, toast]);
+  
+  const performActivity = useCallback((activity: TrainingActivity) => {
     setGameState(prev => {
-      if (!prev.artist) return prev;
-
-      let newArtistState = { ...prev.artist };
-      let newPlayerSongs = [...prev.songs];
-      let newNpcSongs = [...prev.npcSongs];
-
-      // Process selected activity
-      if (prev.selectedActivityId) {
-        const activity = AVAILABLE_TRAINING_ACTIVITIES.find(act => act.id === prev.selectedActivityId);
-        if (activity && newArtistState.money >= activity.cost) {
-          newArtistState.money -= activity.cost;
-          if (activity.effects.skills) newArtistState.skills = Math.min(100, Math.max(0, newArtistState.skills + activity.effects.skills));
-          if (activity.effects.reputation) newArtistState.reputation = Math.min(100, Math.max(0, newArtistState.reputation + activity.effects.reputation));
-          if (activity.effects.fame) newArtistState.fame = Math.max(0, newArtistState.fame + activity.effects.fame);
-          if (activity.effects.money) newArtistState.money += activity.effects.money;
-          if (activity.effects.fanbase) newArtistState.fanbase = Math.max(0, newArtistState.fanbase + activity.effects.fanbase);
+        if (!prev.artist || prev.artist.money < activity.cost) {
+            toast({
+                title: "Cannot perform activity",
+                description: `You need $${activity.cost} for ${activity.name}. You only have $${prev.artist.money}.`,
+                variant: "destructive",
+            });
+            return prev;
         }
-      }
 
-      // Weekly living costs & passive fame
-      newArtistState.money -= 50;
-      if (newArtistState.money < 0) newArtistState.money = 0;
-      if (prev.artist.fanbase > 1000 && prev.artist.fame > 10) {
-        newArtistState.fame += Math.floor(prev.artist.fanbase / 1000);
-      } else if (prev.artist.fame > 0) {
-        newArtistState.fame -=1;
-        if (newArtistState.fame < 0) newArtistState.fame = 0;
-      }
+        const newArtistState = { ...prev.artist };
+        newArtistState.money -= activity.cost;
+        if (activity.effects.skills) newArtistState.skills = Math.min(100, Math.max(0, newArtistState.skills + activity.effects.skills));
+        if (activity.effects.reputation) newArtistState.reputation = Math.min(100, Math.max(0, newArtistState.reputation + activity.effects.reputation));
+        if (activity.effects.fame) newArtistState.fame = Math.max(0, newArtistState.fame + activity.effects.fame);
+        if (activity.effects.money) newArtistState.money += activity.effects.money;
+        if (activity.effects.fanbase) newArtistState.fanbase = Math.max(0, newArtistState.fanbase + activity.effects.fanbase);
+        
+        toast({
+            title: "Activity Completed!",
+            description: `You spent $${activity.cost} on ${activity.name}.`,
+        });
 
-      // Weekly streams and sales for player songs
-      newPlayerSongs = newPlayerSongs.map(song => {
-        if (song.isReleased && song.currentChartPosition && song.currentChartPosition <= CHART_SIZE) {
-          let qualityMultiplier = 1.0;
-          if (song.productionQuality === 'Medium') qualityMultiplier = 1.2;
-          if (song.productionQuality === 'High') qualityMultiplier = 1.5;
-          
-          const baseStreams = (101 - song.currentChartPosition) * 50; // Higher rank = more base streams
-          const fameBonus = newArtistState.fame * 2;
-          const fanbaseBonus = newArtistState.fanbase * 0.05;
-          
-          let weeklyStreams = Math.floor(
-            (baseStreams + fameBonus + fanbaseBonus) * qualityMultiplier * (Math.random() * 0.4 + 0.8) // 80-120% fluctuation
-          );
-          weeklyStreams = Math.max(0, weeklyStreams);
-
-          const weeklyEarnings = Math.floor(weeklyStreams * EARNING_PER_STREAM);
-          
-          newArtistState.money += weeklyEarnings;
-          
-          return {
-            ...song,
-            sales: (song.sales || 0) + weeklyStreams,
-            weeklyStreams: weeklyStreams,
-            totalEarnings: (song.totalEarnings || 0) + weeklyEarnings,
-          };
-        }
-        return {...song, weeklyStreams: 0}; // Reset weekly streams if not charting or not released
-      });
-      
-      // NPC Song Release Logic (e.g. 20% chance per turn for one NPC)
-      if (Math.random() < 0.20 && prev.npcArtists.length > 0) {
-        const randomNpcIndex = Math.floor(Math.random() * prev.npcArtists.length);
-        const releasingNpc = prev.npcArtists[randomNpcIndex];
-        const songTitlesBank = ["New Wave Hit", "Chart Climber", "Fresh Sound", "Radio Killer", "Viral Track", "Unexpected Drop"];
-        const newNpcSong: NPCSong = {
-          id: `npcsong-${releasingNpc.id}-${Date.now()}-${Math.random().toString(36).substr(2,5)}`,
-          title: `${songTitlesBank[Math.floor(Math.random() * songTitlesBank.length)]} by ${releasingNpc.name}`,
-          artistId: releasingNpc.id,
-          artistName: releasingNpc.name,
-          genre: releasingNpc.genre,
-          chartScore: Math.floor(Math.random() * 200 * (releasingNpc.popularity / 5)) + (300 * (releasingNpc.popularity / 5)) + 100, // New songs strong based on NPC pop
-          releaseTurn: prev.currentTurn,
-          weeksOnChart: 0,
+        return {
+            ...prev,
+            artist: newArtistState,
         };
-        newNpcSongs.push(newNpcSong);
-      }
-
-
-      // Chart Logic
-      const allChartableSongs: (Song | NPCSong)[] = [
-          ...newPlayerSongs.filter(s => s.isReleased && s.chartScore !== undefined && s.chartScore > 0),
-          ...newNpcSongs.filter(s => s.chartScore !== undefined && s.chartScore > 0)
-      ];
-
-      const updatedChartSongs = allChartableSongs.map(s => {
-          let newScore = s.chartScore || 0;
-          newScore *= (0.90 + Math.random() * 0.1); 
-          newScore += (Math.random() * 40 - 20); 
-
-          let weeks = (s.weeksOnChart || 0) + 1;
-          if (weeks > 15 && newScore > 100) newScore *= 0.85; 
-          if (weeks > 25 && newScore > 50) newScore *= 0.70;
-          if (newScore < 10 || weeks > 40) newScore = 0; 
-
-          return { ...s, chartScore: Math.max(0, newScore), weeksOnChart: weeks };
-      }).filter(s => s.chartScore! > 0);
-
-      updatedChartSongs.sort((a, b) => (b.chartScore || 0) - (a.chartScore || 0));
-      const finalChart = updatedChartSongs.slice(0, CHART_SIZE);
-
-      newPlayerSongs = newPlayerSongs.map(playerSong => {
-          if (!playerSong.isReleased) return playerSong;
-          const chartEntry = finalChart.find(cs => cs.id === playerSong.id && 'lyrics' in cs); 
-          if (chartEntry) {
-              const newPosition = finalChart.indexOf(chartEntry) + 1;
-              return {
-                  ...playerSong,
-                  currentChartPosition: newPosition,
-                  peakChartPosition: Math.min(playerSong.peakChartPosition || CHART_SIZE + 1, newPosition),
-                  weeksOnChart: chartEntry.weeksOnChart,
-                  chartScore: chartEntry.chartScore,
-              };
-          }
-          return { ...playerSong, currentChartPosition: null, chartScore: 0, weeksOnChart: (playerSong.weeksOnChart || 0) +1 }; 
-      });
-
-      newNpcSongs = newNpcSongs.map(npcSong => {
-          const chartEntry = finalChart.find(cs => cs.id === npcSong.id && !('lyrics' in cs)); 
-          if (chartEntry) {
-              const newPosition = finalChart.indexOf(chartEntry) + 1;
-              return {
-                  ...npcSong,
-                  currentChartPosition: newPosition,
-                  peakChartPosition: Math.min(npcSong.peakChartPosition || CHART_SIZE + 1, newPosition),
-                  weeksOnChart: chartEntry.weeksOnChart,
-                  chartScore: chartEntry.chartScore,
-              };
-          }
-          const processedSong = updatedChartSongs.find(s => s.id === npcSong.id);
-          if (processedSong) {
-             return {...npcSong, currentChartPosition: null, weeksOnChart: processedSong.weeksOnChart, chartScore: processedSong.chartScore };
-          }
-          return { ...npcSong, currentChartPosition: null, chartScore: 0, weeksOnChart: (npcSong.weeksOnChart || 0) +1 };
-      }).filter(s => (s.weeksOnChart || 0) < 52 || (s.chartScore || 0) > 0); // Keep if on chart or not too old
-
-
-      return {
-        ...prev,
-        currentTurn: prev.currentTurn + 1,
-        artist: newArtistState,
-        songs: newPlayerSongs,
-        npcSongs: newNpcSongs,
-        selectedActivityId: null,
-      };
     });
-  }, []);
+}, [toast]);
 
   const addSong = useCallback((song: Omit<Song, 'id' | 'isReleased' | 'releaseTurn' | 'productionQuality' | 'productionInvestment' | 'chartScore' | 'sales' | 'weeklyStreams' | 'totalEarnings'>) => {
     setGameState(prev => {
@@ -578,7 +455,6 @@ export function useGameState() {
   return {
     gameState,
     createArtist,
-    nextTurn,
     addSong,
     updateSong,
     releaseSong,
@@ -587,7 +463,7 @@ export function useGameState() {
     resolveActiveEvent,
     updateArtistStats,
     isLoaded,
-    selectWeeklyActivity,
+    performActivity,
     investInSongProduction,
   };
 }
