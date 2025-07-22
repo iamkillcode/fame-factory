@@ -51,6 +51,7 @@ export const initialGameState: GameState = {
   availableGenders: ALL_GENDERS,
   npcArtists: [],
   npcSongs: [],
+  gameStartDate: undefined,
 };
 
 const generateInitialNPCSongs = (npcArtists: NPCArtist[], currentTurn: number): NPCSong[] => {
@@ -130,6 +131,7 @@ export function useGameState() {
               availableGenres: loadedData.availableGenres || initialGameState.availableGenres,
               availableGenders: loadedData.availableGenders || initialGameState.availableGenders,
               lyricThemes: loadedData.lyricThemes || initialGameState.lyricThemes,
+              gameStartDate: loadedData.gameStartDate,
             };
           } else {
             // New user, set up a fresh state with NPCs
@@ -141,6 +143,7 @@ export function useGameState() {
               currentTurn: 1,
               npcArtists: initialNpcArtists,
               npcSongs: initialNpcSongs,
+              gameStartDate: undefined,
             };
           }
           setGameState(finalState);
@@ -152,15 +155,8 @@ export function useGameState() {
             description: "Could not load your game progress. Starting fresh or try refreshing.",
             variant: "destructive",
           });
-          // Fallback to a clean initial state, even on error
-          const fallbackNpcArtists = NPC_ARTIST_POOL_DATA.map((na, index) => ({ id: `npc-${index}`, ...na }));
-          const fallbackNpcSongs = generateInitialNPCSongs(fallbackNpcArtists, 1);
-          setGameState({
-              ...initialGameState,
-              artist: null,
-              npcArtists: fallbackNpcArtists,
-              npcSongs: fallbackNpcSongs,
-          });
+          // Don't reset state here to prevent wiping a valid state if there's a temporary network issue.
+          // Let the existing state (initial or last known) persist.
         })
         .finally(() => {
           setIsLoaded(true);
@@ -221,6 +217,7 @@ export function useGameState() {
       eventHistory: [],
       npcArtists: initialNpcArtists,
       npcSongs: initialNpcSongs,
+      gameStartDate: new Date().toISOString(),
     }));
   }, [currentUser, toast]);
   

@@ -21,7 +21,7 @@ import { AVAILABLE_TRAINING_ACTIVITIES } from '@/hooks/use-game-state';
 import type { TrainingActivity } from '@/types';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState, useEffect } from 'react';
 
 
 const CustomTooltipComponent = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
@@ -54,6 +54,30 @@ const activityIcons: Record<string, React.ElementType> = {
 export default function DashboardPage() {
   const { gameState, isLoaded, performActivity } = useGame();
   const { toast } = useToast();
+  const [gameTime, setGameTime] = useState<Date | null>(null);
+
+  useEffect(() => {
+    if (!gameState.gameStartDate) {
+      setGameTime(null);
+      return;
+    }
+
+    const realWorldStartDate = new Date(gameState.gameStartDate);
+    const inGameBaseDate = new Date('2024-01-01T00:00:00Z');
+
+    const intervalId = setInterval(() => {
+      const now = new Date();
+      const elapsedRealMilliseconds = now.getTime() - realWorldStartDate.getTime();
+      
+      const realMinutesElapsed = elapsedRealMilliseconds / (1000 * 60);
+      const inGameDaysElapsed = realMinutesElapsed;
+      
+      const currentInGameTime = new Date(inGameBaseDate.getTime() + inGameDaysElapsed * 24 * 60 * 60 * 1000);
+      setGameTime(currentInGameTime);
+    }, 1000); // Update every second
+
+    return () => clearInterval(intervalId);
+  }, [gameState.gameStartDate]);
 
   if (!isLoaded || !gameState.artist) {
     return <div className="flex h-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /> Loading Dashboard...</div>;
@@ -100,11 +124,24 @@ export default function DashboardPage() {
 
   const recentReleasedSongs = songs.filter(s => s.isReleased).slice(-3).reverse();
 
+  const formattedGameTime = gameTime 
+    ? gameTime.toLocaleString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric', 
+        hour: 'numeric', 
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: true 
+      }) 
+    : 'Initializing...';
+
+
   return (
     <div className="space-y-8">
       <PageHeader
         title={`Welcome, ${artist.name}!`}
-        description={`It's currently Week ${currentTurn} in the Fame Factory universe.`}
+        description={formattedGameTime}
         icon={Star}
       />
 
@@ -134,7 +171,7 @@ export default function DashboardPage() {
         <SectionCard title="Quick Actions">
           <div className="space-y-3">
             <Button asChild variant="outline" className="w-full justify-start text-left glassy-card hover:bg-primary/10">
-              <Link href="/music-forge">
+              <Link href="/write-songs">
                 <Wand2 className="mr-2 h-4 w-4 text-primary" />
                 Craft New Music
               </Link>
@@ -189,6 +226,7 @@ export default function DashboardPage() {
                   {activity.effects.reputation ? ` Rep +${activity.effects.reputation}` : ""}
                   {activity.effects.fame ? ` Fame +${activity.effects.fame}` : ""}
                   {activity.effects.money ? ` Money ${activity.effects.money > 0 ? '+' : ''}${activity.effects.money}` : ""}
+                  {activity.effects.fanbase ? ` Fans +${activity.effects.fanbase}` : ""}
                 </div>
               </Button>
             );
@@ -203,7 +241,7 @@ export default function DashboardPage() {
             {recentReleasedSongs.map(song => (
               <div key={song.id} className="p-4 rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm">
                 <h3 className="font-semibold text-lg text-foreground">{song.title}</h3>
-                <p className="text-sm text-muted-foreground">Style: {song.style} | Theme: {song.theme}</p>
+                <p className="text-sm text-muted-foreground">Genre: {song.genre} | Theme: {song.theme}</p>
                 <p className="text-sm text-muted-foreground">Production: {song.productionQuality} (${song.productionInvestment} invested)</p>
                 <p className="text-sm text-muted-foreground">Released: Week {song.releaseTurn}</p>
                 {song.currentChartPosition && <p className="text-sm text-primary">Chart Position: #{song.currentChartPosition}</p>}

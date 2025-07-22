@@ -130,6 +130,7 @@ export interface GameState {
   availableGenders: Gender[];
   npcArtists: NPCArtist[];
   npcSongs: NPCSong[];
+  gameStartDate?: string;
 }
 
 export const ALL_GENRES: Genre[] = ['Pop', 'Rock', 'Hip Hop', 'R&B', 'Electronic', 'Country', 'Jazz', 'Blues', 'K-Pop', 'Indie', 'Folk', 'Metal', 'Rap'];
