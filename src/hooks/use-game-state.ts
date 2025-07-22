@@ -51,7 +51,7 @@ export const initialGameState: GameState = {
   availableGenders: ALL_GENDERS,
   npcArtists: [],
   npcSongs: [],
-  gameStartDate: undefined,
+  gameStartDate: null,
 };
 
 const generateInitialNPCSongs = (npcArtists: NPCArtist[], currentTurn: number): NPCSong[] => {
@@ -131,7 +131,7 @@ export function useGameState() {
               availableGenres: loadedData.availableGenres || initialGameState.availableGenres,
               availableGenders: loadedData.availableGenders || initialGameState.availableGenders,
               lyricThemes: loadedData.lyricThemes || initialGameState.lyricThemes,
-              gameStartDate: loadedData.gameStartDate,
+              gameStartDate: loadedData.gameStartDate || null, // Ensure it's not undefined
             };
           } else {
             // New user, set up a fresh state with NPCs
@@ -143,7 +143,7 @@ export function useGameState() {
               currentTurn: 1,
               npcArtists: initialNpcArtists,
               npcSongs: initialNpcSongs,
-              gameStartDate: undefined,
+              gameStartDate: null,
             };
           }
           setGameState(finalState);
@@ -460,3 +460,5 @@ export function useGameState() {
     investInSongProduction,
   };
 }
+
+    

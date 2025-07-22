@@ -27,16 +27,12 @@ export default function BillboardPage() {
 
     const sortedSongs = allSongs
       .sort((a, b) => (b.chartScore || 0) - (a.chartScore || 0))
-      .slice(0, 100); // Top 100
+      .slice(0, 100); 
 
-    // Simple way to track previous rank for trend indicator - this would be more robust if prev turn chart was stored
-    // For now, we'll assume if it's on chart and has a position, its prev position was similar or it's new.
+    
     return sortedSongs.map((song, index) => ({
       ...song,
       rank: index + 1,
-      // previousRank: song.currentChartPosition ? (song.currentChartPosition > index +1 ? song.currentChartPosition : (song.currentChartPosition < index +1 ? song.currentChartPosition : null)) : null 
-      // This is a placeholder for previousRank logic, if we store it.
-      // For now, let's just use current position if it exists and assume it was its previous, or null if new.
       previousRank: song.currentChartPosition && song.weeksOnChart && song.weeksOnChart > 0 ? song.currentChartPosition : null
     }));
   }, [gameState, isLoaded]);
@@ -85,7 +81,7 @@ export default function BillboardPage() {
                     </TableCell>
                     <TableCell>
                       <div className="font-medium text-foreground">{song.title}</div>
-                      <div className="text-xs text-muted-foreground">{song.genre}</div>
+                      <div className="text-xs text-muted-foreground">{'genre' in song ? song.genre : ''}</div>
                     </TableCell>
                     <TableCell>
                       {'lyrics' in song ? (
@@ -106,3 +102,5 @@ export default function BillboardPage() {
     </div>
   );
 }
+
+    

@@ -114,6 +114,7 @@ export interface NPCSong {
   peakChartPosition?: number;
   weeksOnChart?: number;
   releaseTurn: number; // Turn it "appeared"
+  previousRank?: number | null;
 }
 
 
@@ -130,7 +131,7 @@ export interface GameState {
   availableGenders: Gender[];
   npcArtists: NPCArtist[];
   npcSongs: NPCSong[];
-  gameStartDate?: string;
+  gameStartDate: string | null;
 }
 
 export const ALL_GENRES: Genre[] = ['Pop', 'Rock', 'Hip Hop', 'R&B', 'Electronic', 'Country', 'Jazz', 'Blues', 'K-Pop', 'Indie', 'Folk', 'Metal', 'Rap'];
@@ -165,3 +166,5 @@ export interface AuthContextType {
   signIn: (credentials: SignInCredentials) => Promise<void>;
   signOut: () => Promise<void>;
 }
+
+    
