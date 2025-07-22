@@ -227,11 +227,7 @@ export function useGameState() {
   const performActivity = useCallback((activity: TrainingActivity) => {
     setGameState(prev => {
         if (!prev.artist || prev.artist.money < activity.cost) {
-            toast({
-                title: "Cannot perform activity",
-                description: `You need $${activity.cost} for ${activity.name}. You only have $${prev.artist.money}.`,
-                variant: "destructive",
-            });
+            // Toast is handled in the component to avoid state update during render issues.
             return prev;
         }
 
