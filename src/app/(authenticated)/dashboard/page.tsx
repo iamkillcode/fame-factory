@@ -4,6 +4,7 @@
 import { useGame } from '@/contexts/game-state-context';
 import { PageHeader } from '@/components/page-header';
 import { StatCard } from '@/components/stat-card';
+import { GameClock } from '@/components/game-clock';
 import { Button } from '@/components/ui/button';
 import { BarChart, DollarSign, TrendingUp, Users, Star, Award, CalendarDays, Loader2, Wand2, Library, MessageCircle, Zap, Palette, Briefcase, Brain, Smile } from 'lucide-react';
 import { SectionCard } from '@/components/section-card';
@@ -30,7 +31,7 @@ const CustomTooltipComponent = ({ active, payload, label }: TooltipProps<ValueTy
       <div className="p-2 bg-popover/80 backdrop-blur-sm shadow-lg rounded-md border border-border text-popover-foreground">
         <p className="label font-semibold">{`${label}`}</p>
         {payload.map((pld, index) => (
-          <div key={index} style={{ color: pld.fill }}>
+          <div key={index} style={{ color: (pld.color as string) }}>
              {`${pld.name}: ${pld.value}`}
           </div>
         ))}
@@ -144,6 +145,8 @@ export default function DashboardPage() {
         description={formattedGameTime}
         icon={Star}
       />
+
+      <GameClock />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatCard title="Fame Level" value={artist.fame.toLocaleString()} icon={TrendingUp} description="How well-known you are." iconClassName="text-yellow-400" />

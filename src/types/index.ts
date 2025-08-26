@@ -13,10 +13,32 @@ export interface Artist {
   genre: Genre;
   backstory?: string;
   fame: number; // 0-1000
-  skills: number; // 0-100 (Overall skill level: vocals, songwriting, stage presence)
   fanbase: number; // Number of fans
   money: number; // In-game currency
   reputation: number; // 0-100 (Public perception)
+  stats: {
+    energy: number;
+    maxEnergy: number;
+    skills: {
+      vocals: number;
+      performance: number;
+      songwriting: number;
+      production: number;
+      social: number;
+      business: number;
+    };
+    lastTrainingTime?: Date;
+    activeTraining?: {
+      activityId: string;
+      startTime: Date;
+      duration: number;
+      completionTime: Date;
+    };
+    completedTrainings: {
+      activityId: string;
+      completedAt: Date;
+    }[];
+  };
 }
 
 export interface LyricSuggestion {
